@@ -41,18 +41,13 @@ class _HomeShellState extends State<HomeShell> {
         selectedFontSize: 12,
         unselectedFontSize: 12,
         items: const [
-          BottomNavigationBarStyleItem(icon: Icons.dashboard_rounded, label: 'Özet'),
-          BottomNavigationBarStyleItem(icon: Icons.videocam_rounded, label: 'Kameralar'),
-          BottomNavigationBarStyleItem(icon: Icons.people_alt_rounded, label: 'İşçiler'),
-          BottomNavigationBarStyleItem(icon: Icons.notifications_rounded, label: 'Alarmlar'),
-          BottomNavigationBarStyleItem(icon: Icons.insert_chart_rounded, label: 'Raporlar'),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Özet'),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam_rounded), label: 'Kameralar'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'İşçiler'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Alarmlar'),
+          BottomNavigationBarItem(icon: Icon(Icons.insert_chart_rounded), label: 'Raporlar'),
         ],
       ),
     );
   }
-}
-
-class BottomNavigationBarStyleItem extends BottomNavigationBarItem {
-  BottomNavigationBarStyleItem({required IconData icon, required String label})
-      : super(icon: Icon(icon), label: label);
 }
