@@ -107,7 +107,7 @@ class CameraStreamScreen extends StatelessWidget {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: const [
-                                      Icon(Icons.live_tv_off_rounded, color: AppColors.alarm, size: 42),
+                                      Icon(Icons.videocam_off_rounded, color: AppColors.alarm, size: 42),
                                       SizedBox(height: 8),
                                       Text(
                                         'Canlı Görüntü Akışı Bekleniyor...',

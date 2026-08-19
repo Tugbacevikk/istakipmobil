@@ -53,6 +53,6 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class BottomNavigationBarStyleItem extends BottomNavigationBarItem {
-  const BottomNavigationBarStyleItem({required IconData icon, required String label})
+  BottomNavigationBarStyleItem({required IconData icon, required String label})
       : super(icon: Icon(icon), label: label);
 }
