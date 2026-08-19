@@ -1,3 +1,0 @@
-"""
-web/services package init
-"""
