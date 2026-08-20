@@ -39,22 +39,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
         title: Row(
           children: [
-            const Icon(Icons.precision_manufacturing_rounded, color: AppColors.cyanAccent, size: 24),
-            const SizedBox(width: 8),
+            const Icon(Icons.dashboard_rounded, color: Colors.white, size: 22),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'İş Takip Sahası',
+                    'Dashboard',
                     style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    provider.isAdmin ? '👑 Admin (Tam Yetki)' : '👔 Patron (${provider.username}) • Saha Yetkisi',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: provider.isAdmin ? AppColors.cyanAccent : Colors.orangeAccent,
-                      fontWeight: FontWeight.w600,
+                    provider.isAdmin ? 'Admin' : 'Patron (${provider.username})',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
