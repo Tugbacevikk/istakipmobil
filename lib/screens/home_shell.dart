@@ -29,7 +29,19 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
-    final unreadAlarmsCount = provider.alarms.where((a) => !a.isResolved).length;
+
+    // Clean alarms count excluding video test files
+    final cleanAlarms = provider.alarms.where((a) {
+      final msg = a.message.toLowerCase();
+      final cam = (a.cameraName ?? '').toLowerCase();
+      return !msg.contains('video:') &&
+          !msg.contains('.mp4') &&
+          !msg.contains('.avi') &&
+          !cam.contains('video:') &&
+          !cam.contains('.mp4');
+    }).toList();
+
+    final alarmCount = cleanAlarms.length;
 
     return Scaffold(
       body: Stack(
@@ -39,7 +51,7 @@ class _HomeShellState extends State<HomeShell> {
             children: _screens,
           ),
 
-          // Global Floating Top Notification Banner (Tüm Ekranlarda Uçan Bildirim Paneli)
+          // Global Floating Top Notification Banner
           if (provider.latestAlarmMessage != null)
             Positioned(
               top: MediaQuery.of(context).padding.top + 8,
@@ -51,7 +63,7 @@ class _HomeShellState extends State<HomeShell> {
                 color: AppColors.alarm,
                 child: InkWell(
                   onTap: () {
-                    setState(() => _currentIndex = 3); // Switch to Alarmlar tab
+                    setState(() => _currentIndex = 3);
                     provider.clearLatestAlarm();
                   },
                   borderRadius: BorderRadius.circular(14),
@@ -132,12 +144,40 @@ class _HomeShellState extends State<HomeShell> {
           const BottomNavigationBarItem(icon: Icon(Icons.videocam_rounded), label: 'Kameralar'),
           const BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'İşçiler'),
           BottomNavigationBarItem(
-            icon: Badge.count(
-              count: unreadAlarmsCount,
-              isLabelVisible: unreadAlarmsCount > 0,
-              backgroundColor: Colors.redAccent,
-              textColor: Colors.white,
-              child: const Icon(Icons.notifications_rounded),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_rounded),
+                if (alarmCount > 0)
+                  Positioned(
+                    right: -8,
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.primary, width: 1.5),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        alarmCount > 99 ? '99+' : '$alarmCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             label: 'Alarmlar',
           ),
