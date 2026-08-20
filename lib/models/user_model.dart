@@ -26,7 +26,7 @@ class UserModel {
       adSoyad: json['ad_soyad'] ?? json['full_name'] ?? 'Kullanıcı',
       email: json['email'],
       rol: json['rol'] ?? json['role'] ?? 'patron',
-      durum: json['durum'] ?? json['status'] ?? 'onaylandi',
+      durum: json['durum'] ?? json['status'] ?? 'bekliyor',
       firmaAdi: json['firma_adi'] ?? json['company_name'],
       istasyonlar: json['istasyonlar']?.toString() ?? json['stations']?.toString(),
     );

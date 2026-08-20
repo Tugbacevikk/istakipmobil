@@ -141,7 +141,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Kullanıcı başvurusu reddedildi.' : 'İşlem sırasında bir hata oluştu.'),
+          content: Text(success ? 'Başvuru reddedildi.' : 'İşlem sırasında bir hata oluştu.'),
           backgroundColor: AppColors.alarm,
         ),
       );
@@ -149,13 +149,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     }
   }
 
-  Future<void> _handleDelete(int userId) async {
+  Future<void> _handleDelete(int userId, String name) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardDark,
-        title: const Text('Kullanıcıyı Sil', style: TextStyle(color: Colors.white)),
-        content: const Text('Bu kullanıcı hesabını silmek istediğinize emin misiniz?', style: TextStyle(color: AppColors.textSecondary)),
+        title: const Text('Başvuruyu / Hesabı Sil', style: TextStyle(color: Colors.white)),
+        content: Text('"$name" başvurusunu tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', style: const TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
           ElevatedButton(
@@ -175,7 +175,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Kullanıcı silindi.' : 'Silme işlemi başarısız.'),
+            content: Text(success ? '"$name" başvurusu/hesabı silindi.' : 'Silme işlemi başarısız.'),
             backgroundColor: success ? AppColors.working : AppColors.alarm,
           ),
         );
@@ -250,7 +250,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                               const Text(
-                                'Patronların izleyebilecekleri istasyonları belirleyerek onaylayın.',
+                                'Patronların izleyebilecekleri istasyonları belirleyerek onaylayın veya silin.',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                             ],
@@ -305,6 +305,22 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     }
 
     final isPending = user.durum == 'onay_bekliyor' || user.durum == 'bekliyor';
+    final isRejected = user.durum == 'reddedildi';
+    final isApproved = user.durum == 'onaylandi' || user.durum == 'aktif';
+
+    String statusText;
+    Color statusColor;
+
+    if (isPending) {
+      statusText = '⚠️ Onay Bekliyor';
+      statusColor = AppColors.idle;
+    } else if (isRejected) {
+      statusText = '❌ Başvuru Reddedildi';
+      statusColor = AppColors.alarm;
+    } else {
+      statusText = '✅ Hesabı Onaylandı';
+      statusColor = AppColors.working;
+    }
 
     return Card(
       color: AppColors.cardDark,
@@ -394,9 +410,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             Row(
               children: [
                 Text(
-                  isPending ? '⚠️ Onay Bekliyor' : '✅ Onaylandı',
+                  statusText,
                   style: TextStyle(
-                    color: isPending ? AppColors.idle : AppColors.working,
+                    color: statusColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 11,
                   ),
@@ -418,6 +434,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           ),
                           onPressed: () => _showApproveDialog(context, user),
                         ),
+                        const SizedBox(width: 4),
                         IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -432,8 +449,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           icon: const Icon(Icons.delete_outline_rounded, color: AppColors.textSecondary, size: 18),
-                          onPressed: () => _handleDelete(user.id),
-                          tooltip: 'Kullanıcıyı Sil',
+                          onPressed: () => _handleDelete(user.id, user.adSoyad),
+                          tooltip: 'Başvuruyu / Hesabı Sil',
                         ),
                     ],
                   ),
