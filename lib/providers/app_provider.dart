@@ -19,6 +19,9 @@ class AppProvider extends ChangeNotifier {
   bool _isConnected = false;
   String _serverUrl = SettingsStorage.defaultServerUrl;
 
+  String _userRole = 'user';
+  String _username = '';
+
   SystemStatus get status => _status;
   List<WorkerModel> get workers => _workers;
   List<AlarmModel> get alarms => _alarms;
@@ -29,12 +32,19 @@ class AppProvider extends ChangeNotifier {
   bool get isConnected => _isConnected;
   String get serverUrl => _serverUrl;
 
+  String get userRole => _userRole;
+  String get username => _username;
+  bool get isAdmin => _userRole == 'admin' || _username == 'admin';
+  bool get isPatron => _userRole == 'patron' || _userRole == 'user';
+
   AppProvider() {
     init();
   }
 
   Future<void> init() async {
     _serverUrl = await SettingsStorage.getServerUrl();
+    _username = (await SettingsStorage.getUsername()) ?? '';
+    _userRole = (await SettingsStorage.getUserRole()) ?? (_username == 'admin' ? 'admin' : 'patron');
     await checkConnectionAndFetch();
     _initSocket();
   }
@@ -63,28 +73,29 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> refreshData() async {
-    _status = await ApiClient.fetchSystemStatus();
-    _workers = await ApiClient.fetchWorkers();
-    _alarms = await ApiClient.fetchAlarms();
-    _cameras = await ApiClient.fetchCameras();
-    _users = await ApiClient.fetchUsers();
+    _username = (await SettingsStorage.getUsername()) ?? '';
+    _userRole = (await SettingsStorage.getUserRole()) ?? (_username == 'admin' ? 'admin' : 'patron');
+
+    final results = await Future.wait([
+      ApiClient.fetchWorkers(),
+      ApiClient.fetchAlarms(),
+      ApiClient.fetchCameras(),
+      ApiClient.fetchSystemStatus(),
+      if (isAdmin) ApiClient.fetchUsers(),
+    ]);
+
+    _workers = results[0] as List<WorkerModel>;
+    _alarms = results[1] as List<AlarmModel>;
+    _cameras = results[2] as List<CameraModel>;
+    _status = results[3] as SystemStatus;
+    if (isAdmin && results.length > 4) {
+      _users = results[4] as List<UserModel>;
+    }
+
     notifyListeners();
   }
 
   void _initSocket() {
-    SocketService.connect(
-      onStatusUpdate: (data) {
-        refreshData();
-      },
-      onNewAlarm: (data) {
-        refreshData();
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    SocketService.disconnect();
-    super.dispose();
+    SocketService.init(_serverUrl);
   }
 }

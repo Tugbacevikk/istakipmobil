@@ -223,9 +223,10 @@ class ApiClient {
       );
 
       final bodyText = loginRes.data?.toString() ?? '';
+      final userRole = (username.trim().toLowerCase() == 'admin') ? 'admin' : 'patron';
       
       if (bodyText.contains('Dashboard') || loginRes.realUri.path.contains('dashboard')) {
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
         return true;
       }
 
@@ -235,7 +236,7 @@ class ApiClient {
       );
 
       if (testResponse.statusCode == 200) {
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
         return true;
       }
 

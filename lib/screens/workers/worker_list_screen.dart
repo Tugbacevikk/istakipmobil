@@ -24,17 +24,20 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
               (worker.sicilNo?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (worker.lastStation?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
 
-          if (_filterStatus == 'Tümü') return matchesSearch;
+          if (!matchesSearch) return false;
+
+          final st = worker.status.toLowerCase();
+          if (_filterStatus == 'Tümü') return true;
           if (_filterStatus == 'Çalışıyor') {
-            return matchesSearch && (worker.status.contains('Çalış') || worker.status.contains('Calis'));
+            return st.contains('çalış') || st.contains('calis') || st == '1' || st == 'aktif';
           }
           if (_filterStatus == 'Duruşta') {
-            return matchesSearch && (worker.status.contains('Duruş') || worker.status.contains('Durus'));
+            return st.contains('duruş') || st.contains('durus') || st == '0' || st == 'inaktif' || st == 'pasif';
           }
           if (_filterStatus == 'Kaynak Yapıyor') {
-            return matchesSearch && worker.status.contains('Kaynak');
+            return st.contains('kaynak');
           }
-          return matchesSearch;
+          return true;
         }).toList();
 
         return Scaffold(

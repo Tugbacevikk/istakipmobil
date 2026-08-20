@@ -18,28 +18,43 @@ class DashboardScreen extends StatelessWidget {
         return Scaffold(
           backgroundColor: AppColors.bgDark,
           appBar: AppBar(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.cardDark,
+            elevation: 0,
             title: Row(
               children: [
-                const Icon(Icons.precision_manufacturing_rounded, color: AppColors.accent),
-                const SizedBox(width: 10),
-                const Text(
-                  'İş Takip Sahası',
-                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                const Icon(Icons.precision_manufacturing_rounded, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'İş Takip Sahası',
+                      style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      provider.isAdmin ? '👑 Admin Hesabı' : '👔 Patron Hesabı',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: provider.isAdmin ? AppColors.cyanAccent : Colors.orangeAccent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.manage_accounts_rounded, color: AppColors.textPrimary),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const UserManagementScreen()),
-                  );
-                },
-                tooltip: 'Kullanıcı & Yönetici Hesapları',
-              ),
+              if (provider.isAdmin)
+                IconButton(
+                  icon: const Icon(Icons.manage_accounts_rounded, color: AppColors.textPrimary),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const UserManagementScreen()),
+                    );
+                  },
+                  tooltip: 'Kullanıcı & Yönetici Hesapları',
+                ),
               IconButton(
                 icon: Icon(
                   isConnected ? Icons.wifi_rounded : Icons.wifi_off_rounded,
