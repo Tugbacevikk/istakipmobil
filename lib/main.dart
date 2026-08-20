@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
 import 'providers/app_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'widgets/mobile_frame_wrapper.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,9 @@ class IsTakipApp extends StatelessWidget {
           ),
           fontFamily: 'Roboto',
         ),
+        builder: (context, child) {
+          return MobileFrameWrapper(child: child ?? const LoginScreen());
+        },
         home: const LoginScreen(),
       ),
     );

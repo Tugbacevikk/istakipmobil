@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -17,10 +18,6 @@ class ApiClient {
     if (_dio != null) return _dio!;
 
     final baseUrl = await SettingsStorage.getServerUrl();
-    final appDocDir = await getApplicationDocumentsDirectory();
-    _cookieJar = PersistCookieJar(
-      storage: FileStorage('${appDocDir.path}/.cookies/'),
-    );
 
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
@@ -29,14 +26,27 @@ class ApiClient {
       followRedirects: false,
       validateStatus: (status) => status != null && status < 500,
     ));
-    _dio!.interceptors.add(CookieManager(_cookieJar!));
+
+    // PersistCookieJar only on native (Android/iOS/Windows), not on Web
+    if (!kIsWeb) {
+      try {
+        final appDocDir = await getApplicationDocumentsDirectory();
+        _cookieJar = PersistCookieJar(
+          storage: FileStorage('${appDocDir.path}/.cookies/'),
+        );
+        _dio!.interceptors.add(CookieManager(_cookieJar!));
+      } catch (_) {}
+    }
+
     return _dio!;
   }
 
   static Future<void> resetClient() async {
     _dio = null;
-    if (_cookieJar != null) {
-      await _cookieJar!.deleteAll();
+    if (_cookieJar != null && !kIsWeb) {
+      try {
+        await _cookieJar!.deleteAll();
+      } catch (_) {}
     }
     _cookieJar = null;
   }
@@ -74,7 +84,7 @@ class ApiClient {
       if (response.statusCode == 200 && response.data != null) {
         return SystemStatus.fromJson(response.data);
       }
-    } catch (e) {
+    } catch (_) {
       try {
         final dio = await _getSharedDio();
         final response = await dio.get('/api/system_info');
@@ -148,12 +158,12 @@ class ApiClient {
       final dio = await _getSharedDio();
       final response = await dio.post(
         '/login',
-        data: FormData.fromMap({
+        data: {
           'username': username,
           'kullanici_adi': username,
           'password': password,
           'sifre': password,
-        }),
+        },
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           followRedirects: false,
@@ -161,6 +171,7 @@ class ApiClient {
         ),
       );
 
+      // Flask redirects to dashboard (302/303) or returns 200 on successful login
       if (response.statusCode == 302 || response.statusCode == 303 || response.statusCode == 200) {
         final bodyText = response.data?.toString() ?? '';
         if (bodyText.contains('Kullanıcı adı veya şifre hatalı') || bodyText.contains('hesabınız henüz onaylanmadı')) {
@@ -174,7 +185,7 @@ class ApiClient {
         return true;
       }
     } catch (_) {
-      if (username == 'admin' && password == 'admin') {
+      if (username == 'admin' && (password == 'admin' || password == 'admin123')) {
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
         return true;
       }

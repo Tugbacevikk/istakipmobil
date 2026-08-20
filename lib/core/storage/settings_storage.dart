@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsStorage {
@@ -6,8 +7,13 @@ class SettingsStorage {
   static const String _keyUsername = 'username';
   static const String _keyUserRole = 'user_role';
 
-  // Default server address (can be updated by user in settings screen)
-  static const String defaultServerUrl = 'http://10.0.2.2:5000'; // 10.0.2.2 for Android emulator -> localhost
+  // Default server address: http://localhost:5000 for Web/Desktop, 10.0.2.2 for Android emulator
+  static String get defaultServerUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5000';
+    }
+    return 'http://10.0.2.2:5000';
+  }
 
   static Future<String> getServerUrl() async {
     final prefs = await SharedPreferences.getInstance();
@@ -16,7 +22,6 @@ class SettingsStorage {
 
   static Future<void> setServerUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
-    // Ensure clean URL without trailing slash
     String cleanUrl = url.trim();
     if (cleanUrl.endsWith('/')) {
       cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
