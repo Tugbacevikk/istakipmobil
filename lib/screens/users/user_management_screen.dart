@@ -392,42 +392,51 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
             // Actions: Approve & Authorize Stations / Reject / Delete
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isPending ? '⚠️ Durum: Onay Bekliyor' : '✅ Durum: Onaylandı',
+                  isPending ? '⚠️ Onay Bekliyor' : '✅ Onaylandı',
                   style: TextStyle(
                     color: isPending ? AppColors.idle : AppColors.working,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: 11,
                   ),
                 ),
-                Row(
-                  children: [
-                    if (isPending) ...[
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 16),
-                        label: const Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.working,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (isPending) ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 14),
+                          label: const Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.working,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () => _showApproveDialog(context, user),
                         ),
-                        onPressed: () => _showApproveDialog(context, user),
-                      ),
-                      const SizedBox(width: 6),
-                      IconButton(
-                        icon: const Icon(Icons.cancel_rounded, color: AppColors.alarm, size: 22),
-                        onPressed: () => _handleReject(user.id),
-                        tooltip: 'Başvuruyu Reddet',
-                      ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.cancel_rounded, color: AppColors.alarm, size: 20),
+                          onPressed: () => _handleReject(user.id),
+                          tooltip: 'Başvuruyu Reddet',
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      if (user.kullaniciAdi != 'admin')
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.textSecondary, size: 18),
+                          onPressed: () => _handleDelete(user.id),
+                          tooltip: 'Kullanıcıyı Sil',
+                        ),
                     ],
-                    if (user.kullaniciAdi != 'admin')
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.textSecondary, size: 20),
-                        onPressed: () => _handleDelete(user.id),
-                        tooltip: 'Kullanıcıyı Sil',
-                      ),
-                  ],
+                  ),
                 ),
               ],
             ),
