@@ -27,7 +27,6 @@ class ApiClient {
       validateStatus: (status) => status != null && status < 500,
     ));
 
-    // PersistCookieJar only on native (Android/iOS/Windows), not on Web
     if (!kIsWeb) {
       try {
         final appDocDir = await getApplicationDocumentsDirectory();
@@ -59,7 +58,7 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 5),
         validateStatus: (status) => status != null && status < 500,
       ));
-      final response = await dio.get('/api/status');
+      final response = await dio.get('/api/camera/status');
       return response.statusCode != null && response.statusCode! < 500;
     } catch (_) {
       try {
@@ -80,19 +79,11 @@ class ApiClient {
   static Future<SystemStatus> fetchSystemStatus() async {
     try {
       final dio = await _getSharedDio();
-      final response = await dio.get('/api/status');
+      final response = await dio.get('/api/camera/status');
       if (response.statusCode == 200 && response.data != null) {
         return SystemStatus.fromJson(response.data);
       }
-    } catch (_) {
-      try {
-        final dio = await _getSharedDio();
-        final response = await dio.get('/api/system_info');
-        if (response.statusCode == 200 && response.data != null) {
-          return SystemStatus.fromJson(response.data);
-        }
-      } catch (_) {}
-    }
+    } catch (_) {}
     return SystemStatus.initial();
   }
 
@@ -123,8 +114,8 @@ class ApiClient {
   }
 
   static Future<List<UserModel>> fetchUsers() async {
+    final dio = await _getSharedDio();
     try {
-      final dio = await _getSharedDio();
       final response = await dio.get('/api/users');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => UserModel.fromJson(x)).toList();
@@ -132,18 +123,13 @@ class ApiClient {
         return (response.data['users'] as List).map((x) => UserModel.fromJson(x)).toList();
       }
     } catch (_) {}
-    return [
-      UserModel(id: 1, kullaniciAdi: 'admin', adSoyad: 'Sistem Yöneticisi', email: 'tcevik2824@gmail.com', rol: 'admin', durum: 'onaylandi'),
-      UserModel(id: 13, kullaniciAdi: 'kadir', adSoyad: 'Kadir Kaya', rol: 'patron', durum: 'onaylandi'),
-      UserModel(id: 14, kullaniciAdi: 'tugba', adSoyad: 'Tuğba Çevik', email: 'tcevik28246@gmail.com', rol: 'patron', durum: 'onaylandi'),
-      UserModel(id: 30, kullaniciAdi: 'proje', adSoyad: 'Proje Proje', email: 'proje2824@gmail.com', rol: 'patron', durum: 'onaylandi'),
-    ];
+    return [];
   }
 
   static Future<List<CameraModel>> fetchCameras() async {
     try {
       final dio = await _getSharedDio();
-      final response = await dio.get('/api/camera/list');
+      final response = await dio.get('/api/cameras/manage');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => CameraModel.fromJson(x)).toList();
       } else if (response.statusCode == 200 && response.data is Map && response.data['cameras'] != null) {
@@ -154,42 +140,23 @@ class ApiClient {
   }
 
   static Future<bool> login(String username, String password) async {
+    final dio = await _getSharedDio();
     try {
-      final dio = await _getSharedDio();
-      final response = await dio.post(
+      await dio.post(
         '/login',
-        data: {
+        data: FormData.fromMap({
           'username': username,
-          'kullanici_adi': username,
           'password': password,
-          'sifre': password,
-        },
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-          followRedirects: false,
-          validateStatus: (status) => status != null && status < 500,
-        ),
+        }),
       );
-
-      // Flask redirects to dashboard (302/303) or returns 200 on successful login
-      if (response.statusCode == 302 || response.statusCode == 303 || response.statusCode == 200) {
-        final bodyText = response.data?.toString() ?? '';
-        if (bodyText.contains('Kullanıcı adı veya şifre hatalı') || bodyText.contains('hesabınız henüz onaylanmadı')) {
-          return false;
-        }
-        await SettingsStorage.setSession(
-          isLoggedIn: true,
-          username: username,
-          role: username == 'admin' ? 'admin' : 'user',
-        );
+      final testResponse = await dio.get('/api/camera/status');
+      if (testResponse.statusCode == 200) {
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: '');
         return true;
       }
-    } catch (_) {
-      if (username == 'admin' && (password == 'admin' || password == 'admin123')) {
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
-        return true;
-      }
+      return false;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 }
