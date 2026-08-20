@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/system_status.dart';
 import '../models/worker.dart';
@@ -22,6 +23,7 @@ class AppProvider extends ChangeNotifier {
   String _userRole = 'user';
   String _username = '';
   String? _latestAlarmMessage;
+  Timer? _syncTimer;
 
   SystemStatus get status => _status;
   List<WorkerModel> get workers => _workers;
@@ -54,6 +56,16 @@ class AppProvider extends ChangeNotifier {
     _userRole = (await SettingsStorage.getUserRole()) ?? (_username == 'admin' ? 'admin' : 'patron');
     await checkConnectionAndFetch();
     _initSocket();
+    _startSyncTimer();
+  }
+
+  void _startSyncTimer() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (_isConnected) {
+        refreshDataSilent();
+      }
+    });
   }
 
   Future<void> updateServerUrl(String newUrl) async {
@@ -62,6 +74,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
     await checkConnectionAndFetch();
     _initSocket();
+    _startSyncTimer();
   }
 
   Future<void> checkConnectionAndFetch() async {
@@ -102,6 +115,28 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshDataSilent() async {
+    try {
+      final results = await Future.wait([
+        ApiClient.fetchWorkers(),
+        ApiClient.fetchAlarms(),
+        ApiClient.fetchCameras(),
+        ApiClient.fetchSystemStatus(),
+        if (isAdmin) ApiClient.fetchUsers(),
+      ]);
+
+      _workers = results[0] as List<WorkerModel>;
+      _alarms = results[1] as List<AlarmModel>;
+      _cameras = results[2] as List<CameraModel>;
+      _status = results[3] as SystemStatus;
+      if (isAdmin && results.length > 4) {
+        _users = results[4] as List<UserModel>;
+      }
+
+      notifyListeners();
+    } catch (_) {}
+  }
+
   void _initSocket() {
     SocketService.connect(
       onNewAlarm: (data) {
@@ -112,8 +147,14 @@ class AppProvider extends ChangeNotifier {
           msg = '🚨 ${data['message']}';
         }
         _latestAlarmMessage = msg;
-        refreshData();
+        refreshDataSilent();
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    super.dispose();
   }
 }
