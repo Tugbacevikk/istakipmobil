@@ -212,10 +212,15 @@ class ApiClient {
     return [];
   }
 
-  static Future<bool> approveUser(int userId) async {
+  static Future<bool> approveUser(int userId, {List<String>? selectedStations}) async {
     try {
       final dio = await _getSharedDio();
-      final response = await dio.post('/api/users/$userId/approve');
+      final response = await dio.post(
+        '/api/users/$userId/approve',
+        data: {
+          'stations': selectedStations ?? ['Istasyon-1', 'Istasyon-2', 'Istasyon-3', 'Istasyon-4'],
+        },
+      );
       return response.statusCode == 200;
     } catch (_) {
       return false;

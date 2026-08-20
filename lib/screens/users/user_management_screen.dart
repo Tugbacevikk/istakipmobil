@@ -15,20 +15,122 @@ class UserManagementScreen extends StatefulWidget {
 class _UserManagementScreenState extends State<UserManagementScreen> {
   bool _isProcessing = false;
 
-  Future<void> _handleApprove(int userId) async {
-    setState(() => _isProcessing = true);
-    final success = await ApiClient.approveUser(userId);
-    setState(() => _isProcessing = false);
+  void _showApproveDialog(BuildContext context, UserModel user) {
+    final Map<String, bool> selectedStations = {
+      'Istasyon-1': true,
+      'Istasyon-2': true,
+      'Istasyon-3': true,
+      'Istasyon-4': true,
+    };
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Kullanıcı kaydı başarıyla onaylandı.' : 'Onaylama sırasında bir hata oluştu.'),
-          backgroundColor: success ? AppColors.working : AppColors.alarm,
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.cardDark,
+              title: Row(
+                children: const [
+                  Icon(Icons.verified_user_rounded, color: AppColors.working),
+                  SizedBox(width: 8),
+                  Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontSize: 16)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${user.adSoyad} (@${user.kullaniciAdi})',
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    if (user.firmaAdi != null && user.firmaAdi!.isNotEmpty)
+                      Text('Firma/Birim: ${user.firmaAdi}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    const SizedBox(height: 14),
+                    const Divider(color: AppColors.cardBorder),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: const [
+                        Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Bu Kullanıcının Görebileceği İstasyonlar:',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    _buildStationCheckTile('tuğba çevik — Istasyon-1', 'Istasyon-1', selectedStations, setDialogState),
+                    _buildStationCheckTile('Kadir Kaya — Istasyon-2', 'Istasyon-2', selectedStations, setDialogState),
+                    _buildStationCheckTile('Haşim Köksal — Istasyon-3', 'Istasyon-3', selectedStations, setDialogState),
+                    _buildStationCheckTile('gizem akarsu — Istasyon-4', 'Istasyon-4', selectedStations, setDialogState),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                  label: const Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.working),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final approvedList = selectedStations.entries.where((e) => e.value).map((e) => e.key).toList();
+                    setState(() => _isProcessing = true);
+                    final success = await ApiClient.approveUser(user.id, selectedStations: approvedList);
+                    setState(() => _isProcessing = false);
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.' : 'Onaylama sırasında bir hata oluştu.'),
+                          backgroundColor: success ? AppColors.working : AppColors.alarm,
+                        ),
+                      );
+                      context.read<AppProvider>().refreshData();
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStationCheckTile(String label, String key, Map<String, bool> selectedMap, StateSetter setDialogState) {
+    final isChecked = selectedMap[key] ?? false;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: isChecked ? AppColors.primary.withValues(alpha: 0.15) : AppColors.bgDark,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isChecked ? AppColors.primary : AppColors.cardBorder),
+      ),
+      child: CheckboxListTile(
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isChecked ? Colors.white : AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: isChecked ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
-      );
-      context.read<AppProvider>().refreshData();
-    }
+        value: isChecked,
+        activeColor: AppColors.primary,
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        onChanged: (val) {
+          setDialogState(() {
+            selectedMap[key] = val ?? false;
+          });
+        },
+      ),
+    );
   }
 
   Future<void> _handleReject(int userId) async {
@@ -93,7 +195,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           backgroundColor: AppColors.bgDark,
           appBar: AppBar(
             backgroundColor: AppColors.primary,
-            title: const Text('Kullanıcı Onaylama & Yönetim', style: TextStyle(color: AppColors.textPrimary)),
+            title: const Text('Patron Yetkilendirme & Üye Onayları', style: TextStyle(color: AppColors.textPrimary)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
@@ -105,7 +207,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             children: [
               Column(
                 children: [
-                  // Pending Approval Banner (Onay Bekleyen Başvurular)
+                  // Pending Approval Banner
                   if (pendingUsers.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -116,7 +218,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '${pendingUsers.length} Adet Onay Bekleyen Yeni Kullanıcı Başvurusu Var!',
+                              '${pendingUsers.length} Adet Onay Bekleyen Başvuru Var!',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                           ),
@@ -144,11 +246,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Sistemde ${users.length} Kayıtlı Kullanıcı Bulunuyor',
+                                'Üye Kayıt Onayları (${users.length} Kayıt)',
                                 style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                               const Text(
-                                'Yönetici (Admin) ve Patron hesaplarının onaylanması ve yetkileri.',
+                                'Patronların izleyebilecekleri istasyonları belirleyerek onaylayın.',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                             ],
@@ -214,6 +316,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -236,6 +339,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         '@${user.kullaniciAdi} • ${user.email ?? "E-Posta Yok"}',
                         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
+                      if (user.firmaAdi != null && user.firmaAdi!.isNotEmpty)
+                        Text(
+                          'Firma / Birim: ${user.firmaAdi}',
+                          style: const TextStyle(color: AppColors.cyanAccent, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
                     ],
                   ),
                 ),
@@ -253,11 +361,36 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 ),
               ],
             ),
+
+            if (user.istasyonlar != null && user.istasyonlar!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.bgDark,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 14),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Yetkili İstasyonlar: ${user.istasyonlar}',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 10),
             const Divider(color: AppColors.cardBorder, height: 1),
             const SizedBox(height: 8),
 
-            // User Actions: Approve / Reject / Delete
+            // Actions: Approve & Authorize Stations / Reject / Delete
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -272,13 +405,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 Row(
                   children: [
                     if (isPending) ...[
-                      IconButton(
-                        icon: const Icon(Icons.check_circle_rounded, color: AppColors.working, size: 24),
-                        onPressed: () => _handleApprove(user.id),
-                        tooltip: 'Başvuruyu Onayla',
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 16),
+                        label: const Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.working,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        ),
+                        onPressed: () => _showApproveDialog(context, user),
                       ),
+                      const SizedBox(width: 6),
                       IconButton(
-                        icon: const Icon(Icons.cancel_rounded, color: AppColors.alarm, size: 24),
+                        icon: const Icon(Icons.cancel_rounded, color: AppColors.alarm, size: 22),
                         onPressed: () => _handleReject(user.id),
                         tooltip: 'Başvuruyu Reddet',
                       ),
