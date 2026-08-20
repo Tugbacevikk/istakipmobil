@@ -429,6 +429,14 @@ class ApiClient {
     }
   }
 
+  static Future<String> _detectRole(Dio dio) async {
+    try {
+      final res = await dio.get('/api/users', options: Options(validateStatus: (s) => true));
+      if (res.statusCode == 200) return 'admin';
+    } catch (_) {}
+    return 'patron';
+  }
+
   static Future<bool> login(String username, String password) async {
     final dio = await _getSharedDio();
     try {
@@ -446,9 +454,9 @@ class ApiClient {
       );
 
       final bodyText = loginRes.data?.toString() ?? '';
-      final userRole = (username.trim().toLowerCase() == 'admin') ? 'admin' : 'patron';
       
       if (bodyText.contains('Dashboard') || loginRes.realUri.path.contains('dashboard')) {
+        final userRole = await _detectRole(dio);
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
         return true;
       }
@@ -459,6 +467,7 @@ class ApiClient {
       );
 
       if (testResponse.statusCode == 200) {
+        final userRole = await _detectRole(dio);
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
         return true;
       }
