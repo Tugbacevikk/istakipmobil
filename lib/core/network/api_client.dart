@@ -129,16 +129,28 @@ class ApiClient {
       final response = await dio.get('/api/alarms');
       final data = _parseResponseData(response.data);
 
+      List<AlarmModel> rawList = [];
       if (response.statusCode == 200) {
         if (data is List) {
-          return data.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
+          rawList = data.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
         } else if (data is Map) {
           final list = data['alarms'] ?? data['data'];
           if (list is List) {
-            return list.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
+            rawList = list.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
           }
         }
       }
+
+      // Exclude video analysis file alarms (only real-time camera/station alarms)
+      return rawList.where((a) {
+        final msg = a.message.toLowerCase();
+        final cam = (a.cameraName ?? '').toLowerCase();
+        return !msg.contains('video:') &&
+            !msg.contains('.mp4') &&
+            !msg.contains('.avi') &&
+            !cam.contains('video:') &&
+            !cam.contains('.mp4');
+      }).toList();
     } catch (_) {}
     return [];
   }
