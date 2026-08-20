@@ -20,21 +20,25 @@ class WorkerModel {
   });
 
   factory WorkerModel.fromJson(Map<String, dynamic> json) {
-    String fullName = json['ad_soyad'] ?? json['name'] ?? '';
-    if (fullName.isEmpty && json['ad'] != null) {
-      fullName = '${json['ad']} ${json['soyad'] ?? ''}'.trim();
+    String fullName = '';
+    final ad = json['ad'] ?? json['first_name'] ?? '';
+    final soyad = json['soyad'] ?? json['last_name'] ?? '';
+    if (ad.toString().isNotEmpty || soyad.toString().isNotEmpty) {
+      fullName = '$ad $soyad'.trim();
     }
-    if (fullName.isEmpty) fullName = 'Bilinmeyen İşçi';
+    if (fullName.isEmpty) {
+      fullName = (json['ad_soyad'] ?? json['name'] ?? 'Bilinmeyen İşçi').toString().trim();
+    }
 
     return WorkerModel(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       name: fullName,
-      sicilNo: json['sicil_no'] ?? json['employee_id'],
-      department: json['departman'] ?? json['department'] ?? 'Genel Üretim',
-      photoUrl: json['fotograf_yolu'] ?? json['photo_url'],
-      status: json['son_durum'] ?? json['status'] ?? (json['aktif'] == 1 ? 'Çalışıyor' : 'Duruşta'),
-      lastSeen: json['son_gorulme'] ?? json['last_seen'] ?? json['kayit_tarihi'],
-      lastStation: json['istasyon_adi'] ?? json['son_istasyon'] ?? json['last_station'],
+      sicilNo: json['sicil_no']?.toString() ?? json['employee_id']?.toString(),
+      department: json['departman']?.toString() ?? json['department']?.toString() ?? 'Genel Üretim',
+      photoUrl: json['fotograf_yolu']?.toString() ?? json['photo_url']?.toString(),
+      status: json['son_durum']?.toString() ?? json['status']?.toString() ?? (json['aktif'] == 1 ? 'Çalışıyor' : 'Duruşta'),
+      lastSeen: json['son_gorulme']?.toString() ?? json['last_seen']?.toString() ?? json['kayit_tarihi']?.toString(),
+      lastStation: json['istasyon_adi']?.toString() ?? json['son_istasyon']?.toString() ?? json['last_station']?.toString(),
     );
   }
 }

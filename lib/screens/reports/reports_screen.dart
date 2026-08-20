@@ -12,11 +12,21 @@ class ReportsScreen extends StatelessWidget {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
         final status = provider.status;
+        final totalWorkers = status.totalWorkers > 0 ? status.totalWorkers : provider.workers.length;
+        final workingCount = status.totalWorkers > 0 
+            ? status.workingCount 
+            : provider.workers.where((w) => w.status == 'Çalışıyor' || w.status == 'aktif' || w.status == '1').length;
+        final idleCount = status.totalWorkers > 0 
+            ? status.idleCount 
+            : provider.workers.where((w) => w.status == 'Duruşta' || w.status == '0').length;
+        final weldingCount = status.totalWorkers > 0 
+            ? status.weldingCount 
+            : provider.workers.where((w) => w.status.contains('Kaynak')).length;
 
-        final total = status.totalWorkers > 0 ? status.totalWorkers : 1;
-        final workingPct = (status.workingCount / total * 100).toStringAsFixed(1);
-        final idlePct = (status.idleCount / total * 100).toStringAsFixed(1);
-        final weldingPct = (status.weldingCount / total * 100).toStringAsFixed(1);
+        final total = totalWorkers > 0 ? totalWorkers : 1;
+        final workingPct = (workingCount / total * 100).toStringAsFixed(1);
+        final idlePct = (idleCount / total * 100).toStringAsFixed(1);
+        final weldingPct = (weldingCount / total * 100).toStringAsFixed(1);
 
         return Scaffold(
           backgroundColor: AppColors.bgDark,
@@ -48,8 +58,8 @@ class ReportsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: AppColors.cardBorder),
                   ),
-                  child: status.totalWorkers == 0
-                      ? Center(
+                  child: totalWorkers == 0
+                      ? const Center(
                           child: Text(
                             'Grafik için henüz yeterli veri yok.',
                             style: TextStyle(color: AppColors.textSecondary),
@@ -62,7 +72,7 @@ class ReportsScreen extends StatelessWidget {
                             sections: [
                               PieChartSectionData(
                                 color: AppColors.working,
-                                value: status.workingCount.toDouble(),
+                                value: (workingCount > 0 ? workingCount : 1).toDouble(),
                                 title: '%$workingPct',
                                 radius: 50,
                                 titleStyle: const TextStyle(
@@ -73,7 +83,7 @@ class ReportsScreen extends StatelessWidget {
                               ),
                               PieChartSectionData(
                                 color: AppColors.idle,
-                                value: status.idleCount.toDouble(),
+                                value: idleCount.toDouble(),
                                 title: '%$idlePct',
                                 radius: 50,
                                 titleStyle: const TextStyle(
@@ -84,7 +94,7 @@ class ReportsScreen extends StatelessWidget {
                               ),
                               PieChartSectionData(
                                 color: AppColors.welding,
-                                value: status.weldingCount.toDouble(),
+                                value: weldingCount.toDouble(),
                                 title: '%$weldingPct',
                                 radius: 50,
                                 titleStyle: const TextStyle(
@@ -99,12 +109,12 @@ class ReportsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Breakdown list
-                _buildReportRow('Çalışan İşçiler', '${status.workingCount} Kişi (%$workingPct)', AppColors.working),
-                const SizedBox(height: 8),
-                _buildReportRow('Duruştaki İşçiler', '${status.idleCount} Kişi (%$idlePct)', AppColors.idle),
-                const SizedBox(height: 8),
-                _buildReportRow('Kaynak İşlemi Yapanlar', '${status.weldingCount} Kişi (%$weldingPct)', AppColors.welding),
+                // Summary Stats Card List
+                _buildReportStatTile('Çalışan İşçiler', '$workingCount Kişi (%$workingPct)', AppColors.working),
+                const SizedBox(height: 10),
+                _buildReportStatTile('Duruştaki İşçiler', '$idleCount Kişi (%$idlePct)', AppColors.idle),
+                const SizedBox(height: 10),
+                _buildReportStatTile('Kaynak İşlemi Yapanlar', '$weldingCount Kişi (%$weldingPct)', AppColors.welding),
               ],
             ),
           ),
@@ -113,12 +123,12 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReportRow(String title, String subtitle, Color color) {
+  Widget _buildReportStatTile(String label, String value, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.cardDark,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
@@ -133,13 +143,13 @@ class ReportsScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                title,
-                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                label,
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           Text(
-            subtitle,
+            value,
             style: TextStyle(color: color, fontWeight: FontWeight.bold),
           ),
         ],
