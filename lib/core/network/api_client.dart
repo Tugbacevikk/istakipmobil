@@ -183,10 +183,21 @@ class ApiClient {
     return [];
   }
 
-  static Future<Map<String, dynamic>> fetchReportSummary() async {
+  static Future<Map<String, dynamic>> fetchReportSummary({
+    String? start,
+    String? end,
+    String? istasyon,
+    String? worker,
+  }) async {
     try {
       final dio = await _getSharedDio();
-      final response = await dio.get('/api/reports/summary');
+      final queryParams = <String, dynamic>{};
+      if (start != null && start.isNotEmpty) queryParams['start'] = start;
+      if (end != null && end.isNotEmpty) queryParams['end'] = end;
+      if (istasyon != null && istasyon.isNotEmpty) queryParams['istasyon'] = istasyon;
+      if (worker != null && worker.isNotEmpty) queryParams['worker'] = worker;
+
+      final response = await dio.get('/api/reports/summary', queryParameters: queryParams);
       final data = _parseResponseData(response.data);
       if (response.statusCode == 200 && data is Map) {
         return Map<String, dynamic>.from(data);
