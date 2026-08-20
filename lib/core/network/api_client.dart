@@ -60,7 +60,7 @@ class ApiClient {
         validateStatus: (status) => status != null && status < 500,
       ));
       final response = await dio.get('/api/status');
-      return response.statusCode == 200;
+      return response.statusCode != null && response.statusCode! < 500;
     } catch (_) {
       try {
         final dio = Dio(BaseOptions(
@@ -70,7 +70,7 @@ class ApiClient {
           validateStatus: (status) => status != null && status < 500,
         ));
         final response = await dio.get('/');
-        return response.statusCode == 200 || response.statusCode == 302;
+        return response.statusCode != null && response.statusCode! < 500;
       } catch (_) {
         return false;
       }
