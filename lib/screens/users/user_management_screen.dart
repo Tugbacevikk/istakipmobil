@@ -306,7 +306,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     final isPending = user.durum == 'onay_bekliyor' || user.durum == 'bekliyor';
     final isRejected = user.durum == 'reddedildi';
-    final isApproved = user.durum == 'onaylandi' || user.durum == 'aktif';
 
     String statusText;
     Color statusColor;
