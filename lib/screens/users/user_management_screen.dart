@@ -15,12 +15,15 @@ class UserManagementScreen extends StatefulWidget {
 class _UserManagementScreenState extends State<UserManagementScreen> {
   bool _isProcessing = false;
 
-  void _showApproveDialog(BuildContext context, UserModel user) {
+  void _showApproveOrEditDialog(BuildContext context, UserModel user, {bool isEditMode = false}) {
+    final String currentIst = user.istasyonlar ?? '';
+    final bool hasAllAccess = currentIst.contains('Tüm Fabrika') || currentIst.isEmpty;
+
     final Map<String, bool> selectedStations = {
-      'Istasyon-1': true,
-      'Istasyon-2': true,
-      'Istasyon-3': true,
-      'Istasyon-4': true,
+      'Istasyon-1': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-1')) : true,
+      'Istasyon-2': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-2')) : true,
+      'Istasyon-3': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-3')) : true,
+      'Istasyon-4': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-4')) : true,
     };
 
     showDialog(
@@ -31,10 +34,16 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             return AlertDialog(
               backgroundColor: AppColors.cardDark,
               title: Row(
-                children: const [
-                  Icon(Icons.verified_user_rounded, color: AppColors.working),
-                  SizedBox(width: 8),
-                  Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontSize: 16)),
+                children: [
+                  Icon(
+                    isEditMode ? Icons.edit_note_rounded : Icons.verified_user_rounded,
+                    color: isEditMode ? AppColors.cyanAccent : AppColors.working,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isEditMode ? 'İstasyon Yetkilerini Düzenle' : 'Onayla & Yetkilendir',
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -73,9 +82,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               actions: [
                 TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                  label: const Text('Onayla & Yetkilendir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.working),
+                  icon: Icon(isEditMode ? Icons.save_rounded : Icons.check_circle_rounded, color: Colors.white, size: 18),
+                  label: Text(
+                    isEditMode ? 'Kaydet & Güncelle' : 'Onayla & Yetkilendir',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isEditMode ? AppColors.primary : AppColors.working,
+                  ),
                   onPressed: () async {
                     Navigator.pop(ctx);
                     final approvedList = selectedStations.entries.where((e) => e.value).map((e) => e.key).toList();
@@ -86,7 +100,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(success ? '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.' : 'Onaylama sırasında bir hata oluştu.'),
+                          content: Text(
+                            success
+                                ? (isEditMode
+                                    ? '"${user.adSoyad}" istasyon yetkileri güncellendi.'
+                                    : '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.')
+                                : 'İşlem sırasında bir hata oluştu.',
+                          ),
                           backgroundColor: success ? AppColors.working : AppColors.alarm,
                         ),
                       );
@@ -250,7 +270,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                               const Text(
-                                'Patronların izleyebilecekleri istasyonları belirleyerek onaylayın veya silin.',
+                                'Patronların izleyebilecekleri istasyon yetkilerini tanımlayın ve düzenleyin.',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                             ],
@@ -405,7 +425,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             const Divider(color: AppColors.cardBorder, height: 1),
             const SizedBox(height: 8),
 
-            // Actions: Approve & Authorize Stations / Reject / Delete
+            // Actions: Approve / Edit Stations / Reject / Delete
             Row(
               children: [
                 Text(
@@ -431,7 +451,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          onPressed: () => _showApproveDialog(context, user),
+                          onPressed: () => _showApproveOrEditDialog(context, user, isEditMode: false),
                         ),
                         const SizedBox(width: 4),
                         IconButton(
@@ -440,6 +460,19 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           icon: const Icon(Icons.cancel_rounded, color: AppColors.alarm, size: 20),
                           onPressed: () => _handleReject(user.id),
                           tooltip: 'Başvuruyu Reddet',
+                        ),
+                        const SizedBox(width: 4),
+                      ] else if (user.rol == 'patron') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 14),
+                          label: const Text('İstasyonları Düzenle', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () => _showApproveOrEditDialog(context, user, isEditMode: true),
                         ),
                         const SizedBox(width: 4),
                       ],
