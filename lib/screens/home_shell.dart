@@ -30,18 +30,19 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    // Clean alarms count excluding video test files
-    final cleanAlarms = provider.alarms.where((a) {
+    // Clean unread alarms count excluding video test files and already read alarms
+    final cleanUnreadAlarms = provider.alarms.where((a) {
       final msg = a.message.toLowerCase();
       final cam = (a.cameraName ?? '').toLowerCase();
-      return !msg.contains('video:') &&
+      return !a.isResolved &&
+          !msg.contains('video:') &&
           !msg.contains('.mp4') &&
           !msg.contains('.avi') &&
           !cam.contains('video:') &&
           !cam.contains('.mp4');
     }).toList();
 
-    final alarmCount = cleanAlarms.length;
+    final alarmCount = cleanUnreadAlarms.length;
 
     return Scaffold(
       body: Stack(
