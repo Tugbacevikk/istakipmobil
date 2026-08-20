@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
@@ -13,6 +14,17 @@ import '../../models/user_model.dart';
 class ApiClient {
   static Dio? _dio;
   static PersistCookieJar? _cookieJar;
+
+  static dynamic _parseResponseData(dynamic data) {
+    if (data is String) {
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return data;
+      }
+    }
+    return data;
+  }
 
   static Future<Dio> _getSharedDio() async {
     if (_dio != null) return _dio!;
@@ -83,8 +95,9 @@ class ApiClient {
     try {
       final dio = await _getSharedDio();
       final response = await dio.get('/api/camera/status');
-      if (response.statusCode == 200 && response.data != null) {
-        return SystemStatus.fromJson(response.data);
+      final data = _parseResponseData(response.data);
+      if (response.statusCode == 200 && data != null && data is Map) {
+        return SystemStatus.fromJson(Map<String, dynamic>.from(data));
       }
     } catch (_) {}
     return SystemStatus.initial();
@@ -94,10 +107,17 @@ class ApiClient {
     try {
       final dio = await _getSharedDio();
       final response = await dio.get('/api/workers');
-      if (response.statusCode == 200 && response.data is List) {
-        return (response.data as List).map((x) => WorkerModel.fromJson(x)).toList();
-      } else if (response.statusCode == 200 && response.data is Map && response.data['workers'] != null) {
-        return (response.data['workers'] as List).map((x) => WorkerModel.fromJson(x)).toList();
+      final data = _parseResponseData(response.data);
+
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data.map((x) => WorkerModel.fromJson(Map<String, dynamic>.from(x))).toList();
+        } else if (data is Map) {
+          final list = data['workers'] ?? data['data'];
+          if (list is List) {
+            return list.map((x) => WorkerModel.fromJson(Map<String, dynamic>.from(x))).toList();
+          }
+        }
       }
     } catch (_) {}
     return [];
@@ -107,23 +127,37 @@ class ApiClient {
     try {
       final dio = await _getSharedDio();
       final response = await dio.get('/api/alarms');
-      if (response.statusCode == 200 && response.data is List) {
-        return (response.data as List).map((x) => AlarmModel.fromJson(x)).toList();
-      } else if (response.statusCode == 200 && response.data is Map && response.data['alarms'] != null) {
-        return (response.data['alarms'] as List).map((x) => AlarmModel.fromJson(x)).toList();
+      final data = _parseResponseData(response.data);
+
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
+        } else if (data is Map) {
+          final list = data['alarms'] ?? data['data'];
+          if (list is List) {
+            return list.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
+          }
+        }
       }
     } catch (_) {}
     return [];
   }
 
   static Future<List<UserModel>> fetchUsers() async {
-    final dio = await _getSharedDio();
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/users');
-      if (response.statusCode == 200 && response.data is List) {
-        return (response.data as List).map((x) => UserModel.fromJson(x)).toList();
-      } else if (response.statusCode == 200 && response.data is Map && response.data['users'] != null) {
-        return (response.data['users'] as List).map((x) => UserModel.fromJson(x)).toList();
+      final data = _parseResponseData(response.data);
+
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data.map((x) => UserModel.fromJson(Map<String, dynamic>.from(x))).toList();
+        } else if (data is Map) {
+          final list = data['users'] ?? data['data'];
+          if (list is List) {
+            return list.map((x) => UserModel.fromJson(Map<String, dynamic>.from(x))).toList();
+          }
+        }
       }
     } catch (_) {}
     return [];
@@ -133,10 +167,17 @@ class ApiClient {
     try {
       final dio = await _getSharedDio();
       final response = await dio.get('/api/cameras/manage');
-      if (response.statusCode == 200 && response.data is List) {
-        return (response.data as List).map((x) => CameraModel.fromJson(x)).toList();
-      } else if (response.statusCode == 200 && response.data is Map && response.data['cameras'] != null) {
-        return (response.data['cameras'] as List).map((x) => CameraModel.fromJson(x)).toList();
+      final data = _parseResponseData(response.data);
+
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data.map((x) => CameraModel.fromJson(Map<String, dynamic>.from(x))).toList();
+        } else if (data is Map) {
+          final list = data['cameras'] ?? data['data'];
+          if (list is List) {
+            return list.map((x) => CameraModel.fromJson(x)).toList();
+          }
+        }
       }
     } catch (_) {}
     return [];
