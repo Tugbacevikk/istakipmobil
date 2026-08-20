@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/settings_storage.dart';
+import '../../models/alarm.dart';
 import '../../providers/app_provider.dart';
 import '../auth/login_screen.dart';
 import '../profile/profile_settings_screen.dart';
@@ -487,7 +488,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAlarmTile(dynamic alarm) {
+  Widget _buildAlarmTile(AlarmModel alarm) {
+    final stationName = alarm.cameraName ?? 'Istasyon-1';
     return Card(
       color: AppColors.cardDark,
       margin: const EdgeInsets.only(bottom: 10),
@@ -505,11 +507,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: const Icon(Icons.warning_amber_rounded, color: AppColors.alarm, size: 20),
         ),
         title: Text(
-          alarm.type,
+          alarm.alarmType,
           style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
         ),
         subtitle: Text(
-          '${alarm.description} • ${alarm.timestamp}',
+          '${alarm.message} ($stationName) • ${alarm.timestamp}',
           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
         ),
       ),
