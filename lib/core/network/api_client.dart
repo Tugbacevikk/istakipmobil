@@ -168,6 +168,16 @@ class ApiClient {
     }
   }
 
+  static Future<bool> toggleWorkerAktif(int workerId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/workers/$workerId/toggle-aktif');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<List<AlarmModel>> fetchAlarms() async {
     try {
       final dio = await _getSharedDio();

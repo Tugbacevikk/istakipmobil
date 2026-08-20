@@ -5,6 +5,7 @@ class WorkerModel {
   final String? department;
   final String? photoUrl;
   final String status;
+  final bool isAktif;
   final String? lastSeen;
   final String? lastStation;
 
@@ -15,6 +16,7 @@ class WorkerModel {
     this.department,
     this.photoUrl,
     required this.status,
+    required this.isAktif,
     this.lastSeen,
     this.lastStation,
   });
@@ -30,15 +32,19 @@ class WorkerModel {
       fullName = (json['ad_soyad'] ?? json['name'] ?? 'Bilinmeyen İşçi').toString().trim();
     }
 
+    final rawAktif = json['aktif'];
+    final bool isAktif = rawAktif == null || rawAktif == 1 || rawAktif == true || rawAktif.toString() == '1';
+
     return WorkerModel(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       name: fullName,
       sicilNo: json['sicil_no']?.toString() ?? json['employee_id']?.toString(),
       department: json['departman']?.toString() ?? json['department']?.toString() ?? 'Genel Üretim',
       photoUrl: json['fotograf_yolu']?.toString() ?? json['photo_url']?.toString(),
-      status: json['son_durum']?.toString() ?? json['status']?.toString() ?? (json['aktif'] == 1 ? 'Çalışıyor' : 'Duruşta'),
+      status: json['son_durum']?.toString() ?? json['status']?.toString() ?? (isAktif ? 'Aktif Çalışan' : 'Pasif Çalışan'),
+      isAktif: isAktif,
       lastSeen: json['son_gorulme']?.toString() ?? json['last_seen']?.toString() ?? json['kayit_tarihi']?.toString(),
-      lastStation: json['istasyon_adi']?.toString() ?? json['son_istasyon']?.toString() ?? json['last_station']?.toString(),
+      lastStation: json['istasyon_adi']?.toString() ?? json['station']?.toString(),
     );
   }
 }

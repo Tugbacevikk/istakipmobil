@@ -85,7 +85,7 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedStation,
+                initialValue: _selectedStation,
                 dropdownColor: AppColors.cardDark,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
@@ -139,6 +139,21 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
     );
   }
 
+  Future<void> _handleToggleAktif(BuildContext context, int workerId, String name, bool currentAktif) async {
+    setState(() => _isSubmitting = true);
+    final ok = await ApiClient.toggleWorkerAktif(workerId);
+    setState(() => _isSubmitting = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok ? '"$name" durumu ${!currentAktif ? "Aktif" : "Pasif"} yapıldı.' : 'Durum değiştirilemedi.'),
+          backgroundColor: ok ? AppColors.working : AppColors.alarm,
+        ),
+      );
+      context.read<AppProvider>().refreshData();
+    }
+  }
+
   Future<void> _handleDeleteWorker(BuildContext context, int workerId, String name) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -185,14 +200,9 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
 
           if (!matchesSearch) return false;
 
-          final st = worker.status.toLowerCase();
           if (_filterStatus == 'Tümü') return true;
-          if (_filterStatus == 'Çalışıyor') {
-            return st.contains('çalış') || st.contains('calis') || st == '1' || st == 'aktif';
-          }
-          if (_filterStatus == 'Duruşta') {
-            return st.contains('duruş') || st.contains('durus') || st == '0' || st == 'inaktif' || st == 'pasif';
-          }
+          if (_filterStatus == 'Aktif Çalışanlar') return worker.isAktif;
+          if (_filterStatus == 'Pasif Çalışanlar') return !worker.isAktif;
           return true;
         }).toList();
 
@@ -247,9 +257,9 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                             children: [
                               _buildChip('Tümü'),
                               const SizedBox(width: 8),
-                              _buildChip('Çalışıyor'),
+                              _buildChip('Aktif Çalışanlar'),
                               const SizedBox(width: 8),
-                              _buildChip('Duruşta'),
+                              _buildChip('Pasif Çalışanlar'),
                             ],
                           ),
                         ),
@@ -309,7 +319,7 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
       selected: isSelected,
       selectedColor: AppColors.primary,
       backgroundColor: AppColors.bgDark,
-      side: BorderSide(color: isSelected ? AppColors.primary : AppColors.cardBorder),
+      side: BorderSide(color: isSelected ? AppColors.cyanAccent : AppColors.cardBorder),
       onSelected: (selected) {
         if (selected) setState(() => _filterStatus = label);
       },
@@ -317,12 +327,16 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
   }
 
   Widget _buildWorkerCard(BuildContext context, WorkerModel worker, bool isAdmin) {
+    final isAktif = worker.isAktif;
+    final badgeColor = isAktif ? AppColors.working : AppColors.textSecondary;
+    final badgeText = isAktif ? '🟢 Aktif Çalışan' : '🔴 Pasif Çalışan';
+
     return Card(
       color: AppColors.cardDark,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.cardBorder),
+        side: BorderSide(color: isAktif ? AppColors.cardBorder : AppColors.alarm.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -333,10 +347,10 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  backgroundColor: badgeColor.withValues(alpha: 0.2),
                   child: Text(
                     worker.name.isNotEmpty ? worker.name[0].toUpperCase() : '?',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -360,12 +374,22 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                     ],
                   ),
                 ),
-                if (isAdmin)
+                if (isAdmin) ...[
+                  IconButton(
+                    icon: Icon(
+                      isAktif ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
+                      color: isAktif ? AppColors.working : AppColors.textSecondary,
+                      size: 28,
+                    ),
+                    onPressed: () => _handleToggleAktif(context, worker.id, worker.name, isAktif),
+                    tooltip: isAktif ? 'Pasife Al' : 'Aktife Al',
+                  ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline_rounded, color: AppColors.alarm, size: 20),
                     onPressed: () => _handleDeleteWorker(context, worker.id, worker.name),
                     tooltip: 'İşçiyi Sil',
                   ),
+                ],
               ],
             ),
             const SizedBox(height: 10),
@@ -391,13 +415,13 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.working.withValues(alpha: 0.15),
+                    color: badgeColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.working.withValues(alpha: 0.4)),
+                    border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
                   ),
-                  child: const Text(
-                    'Aktif İşçi',
-                    style: TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 10),
+                  child: Text(
+                    badgeText,
+                    style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                 ),
               ],
