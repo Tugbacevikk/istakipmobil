@@ -119,7 +119,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final username = provider.username;
-    final role = provider.userRole;
     final isAdmin = provider.isAdmin;
 
     return Scaffold(
