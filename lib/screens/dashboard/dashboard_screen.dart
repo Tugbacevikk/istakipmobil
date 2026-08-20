@@ -79,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Açılır-Kapanır PopUp Döküm Menüsü
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-            dropdownColor: AppColors.cardDark,
+            color: AppColors.cardDark,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) async {
               if (value == 'profile') {
