@@ -217,12 +217,38 @@ class ApiClient {
         } else if (data is Map) {
           final list = data['cameras'] ?? data['data'];
           if (list is List) {
-            return list.map((x) => CameraModel.fromJson(x)).toList();
+            return list.map((x) => CameraModel.fromJson(Map<String, dynamic>.from(x))).toList();
           }
         }
       }
     } catch (_) {}
     return [];
+  }
+
+  static Future<bool> addCamera(String istasyonAdi, String ipAdresi) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post(
+        '/api/cameras/manage',
+        data: {
+          'istasyon_adi': istasyonAdi,
+          'ip_adresi': ipAdresi,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteCamera(int camId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/cameras/manage/$camId');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<Map<String, dynamic>> fetchReportSummary({
