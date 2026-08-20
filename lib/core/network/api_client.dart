@@ -94,7 +94,7 @@ class ApiClient {
   static Future<SystemStatus> fetchSystemStatus() async {
     try {
       final dio = await _getSharedDio();
-      final response = await dio.get('/api/status');
+      final response = await dio.get('/api/camera/status');
       final data = _parseResponseData(response.data);
       if (response.statusCode == 200 && data != null && data is Map) {
         return SystemStatus.fromJson(Map<String, dynamic>.from(data));
@@ -102,7 +102,7 @@ class ApiClient {
     } catch (_) {}
     try {
       final dio = await _getSharedDio();
-      final response = await dio.get('/api/camera/status');
+      final response = await dio.get('/api/status');
       final data = _parseResponseData(response.data);
       if (response.statusCode == 200 && data != null && data is Map) {
         return SystemStatus.fromJson(Map<String, dynamic>.from(data));
