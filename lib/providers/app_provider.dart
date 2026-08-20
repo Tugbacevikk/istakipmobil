@@ -96,6 +96,6 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _initSocket() {
-    SocketService.init(_serverUrl);
+    SocketService.connect();
   }
 }
