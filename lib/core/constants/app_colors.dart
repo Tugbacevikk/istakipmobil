@@ -23,9 +23,16 @@ class AppColors {
 
   // Background & Surface
   static const Color bgDark = Color(0xFF0F172A);
-  static const Color bgLight = Color(0xFFF8FAFC);
+  static const Color bgLight = Color(0xFFF1F5F9);
 
   // Text
   static const Color textPrimary = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF94A3B8);
+
+  // Dynamic Theme Helpers
+  static Color getBg(bool isDark) => isDark ? bgDark : bgLight;
+  static Color getCard(bool isDark) => isDark ? cardDark : Colors.white;
+  static Color getText(bool isDark) => isDark ? textPrimary : const Color(0xFF0F172A);
+  static Color getSubText(bool isDark) => isDark ? textSecondary : const Color(0xFF64748B);
+  static Color getBorder(bool isDark) => isDark ? cardBorder : const Color(0xFFCBD5E1);
 }

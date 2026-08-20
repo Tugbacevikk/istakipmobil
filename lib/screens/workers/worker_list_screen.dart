@@ -206,11 +206,18 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
           return true;
         }).toList();
 
+        final isDark = provider.isDarkMode;
+        final bgColor = AppColors.getBg(isDark);
+        final cardColor = AppColors.getCard(isDark);
+        final textColor = AppColors.getText(isDark);
+        final subTextColor = AppColors.getSubText(isDark);
+        final borderColor = AppColors.getBorder(isDark);
+
         return Scaffold(
-          backgroundColor: AppColors.bgDark,
+          backgroundColor: bgColor,
           appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            title: const Text('İşçi Listesi & Saha Durumları', style: TextStyle(color: AppColors.textPrimary)),
+            backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+            title: const Text('İşçi Listesi & Saha Durumları', style: TextStyle(color: Colors.white)),
             actions: [
               if (isAdmin)
                 IconButton(
@@ -230,23 +237,23 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                 children: [
                   // Search & Filter
                   Container(
-                    color: AppColors.cardDark,
+                    color: cardColor,
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
                         TextField(
                           onChanged: (val) => setState(() => _searchQuery = val),
-                          style: const TextStyle(color: AppColors.textPrimary),
+                          style: TextStyle(color: textColor),
                           decoration: InputDecoration(
                             hintText: 'İşçi Adı veya Sicil No ile Ara...',
-                            hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
+                            hintStyle: TextStyle(color: subTextColor, fontSize: 14),
+                            prefixIcon: Icon(Icons.search_rounded, color: subTextColor),
                             filled: true,
-                            fillColor: AppColors.bgDark,
+                            fillColor: bgColor,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                              borderSide: BorderSide(color: borderColor),
                             ),
                           ),
                         ),
@@ -255,11 +262,11 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [
-                              _buildChip('Tümü'),
+                              _buildChip('Tümü', isDark),
                               const SizedBox(width: 8),
-                              _buildChip('Aktif Çalışanlar'),
+                              _buildChip('Aktif Çalışanlar', isDark),
                               const SizedBox(width: 8),
-                              _buildChip('Pasif Çalışanlar'),
+                              _buildChip('Pasif Çalışanlar', isDark),
                             ],
                           ),
                         ),
@@ -288,7 +295,7 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                             itemCount: workers.length,
                             itemBuilder: (context, index) {
                               final worker = workers[index];
-                              return _buildWorkerCard(context, worker, isAdmin);
+                              return _buildWorkerCard(context, worker, isAdmin, cardColor, textColor, subTextColor, borderColor);
                             },
                           ),
                   ),
@@ -306,37 +313,45 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
     );
   }
 
-  Widget _buildChip(String label) {
+  Widget _buildChip(String label, bool isDark) {
     final isSelected = _filterStatus == label;
     return ChoiceChip(
       label: Text(
         label,
         style: TextStyle(
-          color: isSelected ? Colors.white : AppColors.textSecondary,
+          color: isSelected ? Colors.white : AppColors.getSubText(isDark),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: isSelected,
       selectedColor: AppColors.primary,
-      backgroundColor: AppColors.bgDark,
-      side: BorderSide(color: isSelected ? AppColors.cyanAccent : AppColors.cardBorder),
+      backgroundColor: AppColors.getBg(isDark),
+      side: BorderSide(color: isSelected ? AppColors.cyanAccent : AppColors.getBorder(isDark)),
       onSelected: (selected) {
         if (selected) setState(() => _filterStatus = label);
       },
     );
   }
 
-  Widget _buildWorkerCard(BuildContext context, WorkerModel worker, bool isAdmin) {
+  Widget _buildWorkerCard(
+    BuildContext context,
+    WorkerModel worker,
+    bool isAdmin,
+    Color cardColor,
+    Color textColor,
+    Color subTextColor,
+    Color borderColor,
+  ) {
     final isAktif = worker.isAktif;
-    final badgeColor = isAktif ? AppColors.working : AppColors.textSecondary;
+    final badgeColor = isAktif ? AppColors.working : subTextColor;
     final badgeText = isAktif ? '🟢 Aktif Çalışan' : '🔴 Pasif Çalışan';
 
     return Card(
-      color: AppColors.cardDark,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isAktif ? AppColors.cardBorder : AppColors.alarm.withValues(alpha: 0.3)),
+        side: BorderSide(color: isAktif ? borderColor : AppColors.alarm.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -360,8 +375,8 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                     children: [
                       Text(
                         worker.name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -369,7 +384,7 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                       const SizedBox(height: 2),
                       Text(
                         'Sicil No: ${worker.sicilNo ?? "Belirtilmedi"} • ${worker.department ?? "Üretim"}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(color: subTextColor, fontSize: 12),
                       ),
                     ],
                   ),

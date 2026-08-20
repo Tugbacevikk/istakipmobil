@@ -25,11 +25,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final provider = context.watch<AppProvider>();
     final isConnected = provider.isConnected;
     final status = provider.status;
+    final isDark = provider.isDarkMode;
+
+    final bgColor = AppColors.getBg(isDark);
+    final cardColor = AppColors.getCard(isDark);
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final borderColor = AppColors.getBorder(isDark);
 
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
         title: Row(
           children: [
             const Icon(Icons.precision_manufacturing_rounded, color: AppColors.cyanAccent, size: 24),
@@ -40,7 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   const Text(
                     'İş Takip Sahası',
-                    style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     provider.isAdmin ? '👑 Admin (Tam Yetki)' : '👔 Patron (${provider.username}) • Saha Yetkisi',
@@ -72,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           // Yenile İkonu
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textPrimary),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: provider.refreshData,
             tooltip: 'Verileri Yenile',
           ),
@@ -80,7 +87,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Açılır-Kapanır PopUp Döküm Menüsü
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-            color: AppColors.cardDark,
+            color: cardColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) async {
               if (value == 'profile') {
@@ -105,14 +112,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      provider.isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-                      color: provider.isDarkMode ? Colors.amber : AppColors.cyanAccent,
+                      isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                      color: isDark ? Colors.amber : AppColors.cyanAccent,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      provider.isDarkMode ? '☀️ Aydınlık Tema' : '🌙 Koyu Tema',
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      isDark ? '☀️ Aydınlık Tema' : '🌙 Koyu Tema',
+                      style: TextStyle(color: textColor, fontSize: 13),
                     ),
                   ],
                 ),
@@ -120,10 +127,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               PopupMenuItem(
                 value: 'profile',
                 child: Row(
-                  children: const [
-                    Icon(Icons.person_outline_rounded, color: AppColors.cyanAccent, size: 20),
-                    SizedBox(width: 10),
-                    Text('Profil & Şifre Ayarları', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  children: [
+                    const Icon(Icons.person_outline_rounded, color: AppColors.cyanAccent, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Profil & Şifre Ayarları', style: TextStyle(color: textColor, fontSize: 13)),
                   ],
                 ),
               ),
@@ -131,20 +138,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 PopupMenuItem(
                   value: 'users',
                   child: Row(
-                    children: const [
-                      Icon(Icons.manage_accounts_rounded, color: AppColors.working, size: 20),
-                      SizedBox(width: 10),
-                      Text('Üye & Patron Onayları', style: TextStyle(color: Colors.white, fontSize: 13)),
+                    children: [
+                      const Icon(Icons.manage_accounts_rounded, color: AppColors.working, size: 20),
+                      const SizedBox(width: 10),
+                      Text('Üye & Patron Onayları', style: TextStyle(color: textColor, fontSize: 13)),
                     ],
                   ),
                 ),
               PopupMenuItem(
                 value: 'server',
                 child: Row(
-                  children: const [
-                    Icon(Icons.dns_rounded, color: Colors.orangeAccent, size: 20),
-                    SizedBox(width: 10),
-                    Text('Sunucu IP / Port Ayarları', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  children: [
+                    const Icon(Icons.dns_rounded, color: Colors.orangeAccent, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Sunucu IP / Port Ayarları', style: TextStyle(color: textColor, fontSize: 13)),
                   ],
                 ),
               ),
@@ -166,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: provider.refreshData,
         color: AppColors.accent,
-        backgroundColor: AppColors.cardDark,
+        backgroundColor: cardColor,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           physics: const AlwaysScrollableScrollPhysics(),
@@ -198,13 +205,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(height: 2),
                             Text(
                               provider.latestAlarmMessage!,
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
+                              style: TextStyle(color: textColor, fontSize: 12),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                        icon: Icon(Icons.close, color: textColor, size: 18),
                         onPressed: provider.clearLatestAlarm,
                       ),
                     ],
@@ -218,7 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 firstChild: const SizedBox.shrink(),
                 secondChild: Container(
                   margin: const EdgeInsets.only(bottom: 16),
-                  child: _buildConnectionBanner(context, isConnected, provider.serverUrl),
+                  child: _buildConnectionBanner(context, isConnected, provider.serverUrl, cardColor, textColor, subTextColor, borderColor),
                 ),
               ),
 
@@ -226,17 +233,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Canlı Saha Özet Bilgileri',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: textColor,
                     ),
                   ),
                   Text(
                     'Toplam: ${status.totalWorkers} İşçi',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: subTextColor, fontSize: 13),
                   ),
                 ],
               ),
@@ -251,6 +258,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: status.workingCount,
                       color: AppColors.working,
                       icon: Icons.engineering_rounded,
+                      cardColor: cardColor,
+                      subTextColor: subTextColor,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -260,6 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: status.idleCount,
                       color: AppColors.idle,
                       icon: Icons.timer_rounded,
+                      cardColor: cardColor,
+                      subTextColor: subTextColor,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -269,6 +280,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: status.weldingCount,
                       color: AppColors.accent,
                       icon: Icons.local_fire_department_rounded,
+                      cardColor: cardColor,
+                      subTextColor: subTextColor,
                     ),
                   ),
                 ],
@@ -284,6 +297,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: status.activeAlarmsCount,
                       icon: Icons.notifications_active_rounded,
                       color: AppColors.alarm,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      subTextColor: subTextColor,
+                      borderColor: borderColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -293,6 +310,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: status.activeCamerasCount,
                       icon: Icons.videocam_rounded,
                       color: AppColors.cyanAccent,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      subTextColor: subTextColor,
+                      borderColor: borderColor,
                     ),
                   ),
                 ],
@@ -303,12 +324,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Son Alarmlar & Saha Uyarıları',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: textColor,
                     ),
                   ),
                   if (provider.alarms.isNotEmpty)
@@ -326,17 +347,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppColors.cardDark,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.cardBorder),
+                    border: Border.all(color: borderColor),
                   ),
                   child: Column(
-                    children: const [
-                      Icon(Icons.check_circle_outline_rounded, color: AppColors.working, size: 42),
-                      SizedBox(height: 8),
+                    children: [
+                      const Icon(Icons.check_circle_outline_rounded, color: AppColors.working, size: 42),
+                      const SizedBox(height: 8),
                       Text(
                         'Sahada aktif alarm bulunmuyor.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        style: TextStyle(color: subTextColor, fontSize: 14),
                       ),
                     ],
                   ),
@@ -348,7 +369,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   itemCount: provider.alarms.length > 5 ? 5 : provider.alarms.length,
                   itemBuilder: (context, index) {
                     final alarm = provider.alarms[index];
-                    return _buildAlarmTile(alarm);
+                    return _buildAlarmTile(alarm, cardColor, textColor, subTextColor, borderColor);
                   },
                 ),
             ],
@@ -358,7 +379,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildConnectionBanner(BuildContext context, bool isConnected, String serverUrl) {
+  Widget _buildConnectionBanner(
+    BuildContext context,
+    bool isConnected,
+    String serverUrl,
+    Color cardColor,
+    Color textColor,
+    Color subTextColor,
+    Color borderColor,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -397,7 +426,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 Text(
                   serverUrl,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  style: TextStyle(color: subTextColor, fontSize: 11),
                 ),
               ],
             ),
@@ -422,11 +451,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required int count,
     required Color color,
     required IconData icon,
+    required Color cardColor,
+    required Color subTextColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
       ),
@@ -446,9 +477,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 2),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: subTextColor,
             ),
           ),
         ],
@@ -461,13 +492,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required int count,
     required IconData icon,
     required Color color,
+    required Color cardColor,
+    required Color textColor,
+    required Color subTextColor,
+    required Color borderColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
@@ -486,17 +521,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   '$count',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: textColor,
                   ),
                 ),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary,
+                    color: subTextColor,
                   ),
                 ),
               ],
@@ -507,14 +542,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAlarmTile(AlarmModel alarm) {
+  Widget _buildAlarmTile(
+    AlarmModel alarm,
+    Color cardColor,
+    Color textColor,
+    Color subTextColor,
+    Color borderColor,
+  ) {
     final stationName = alarm.cameraName ?? 'Istasyon-1';
     return Card(
-      color: AppColors.cardDark,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.cardBorder),
+        side: BorderSide(color: borderColor),
       ),
       child: ListTile(
         leading: Container(
@@ -527,11 +568,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         title: Text(
           alarm.alarmType,
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
         ),
         subtitle: Text(
           '${alarm.message} ($stationName) • ${alarm.timestamp}',
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: subTextColor, fontSize: 11),
         ),
       ),
     );

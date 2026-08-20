@@ -23,11 +23,17 @@ class AlarmListScreen extends StatelessWidget {
               !cam.contains('.mp4');
         }).toList();
 
+        final isDark = provider.isDarkMode;
+        final bgColor = AppColors.getBg(isDark);
+        final cardColor = AppColors.getCard(isDark);
+        final textColor = AppColors.getText(isDark);
+        final subTextColor = AppColors.getSubText(isDark);
+
         return Scaffold(
-          backgroundColor: AppColors.bgDark,
+          backgroundColor: bgColor,
           appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            title: const Text('Alarmlar & Saha İhlalleri', style: TextStyle(color: AppColors.textPrimary)),
+            backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+            title: const Text('Alarmlar & Saha İhlalleri', style: TextStyle(color: Colors.white)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.done_all_rounded, color: AppColors.cyanAccent),
@@ -55,17 +61,12 @@ class AlarmListScreen extends StatelessWidget {
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.shield_rounded, size: 54, color: AppColors.working),
-                      SizedBox(height: 12),
+                    children: [
+                      const Icon(Icons.shield_rounded, size: 54, color: AppColors.working),
+                      const SizedBox(height: 12),
                       Text(
-                        'Aktif alarm veya ihlal bulunmuyor.',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Tüm saha güvenlik şartları normal.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        'Şu anda bildirilen saha ihlali bulunmuyor.',
+                        style: TextStyle(color: subTextColor, fontSize: 16),
                       ),
                     ],
                   ),
@@ -75,7 +76,7 @@ class AlarmListScreen extends StatelessWidget {
                   itemCount: alarms.length,
                   itemBuilder: (context, index) {
                     final alarm = alarms[index];
-                    return _buildAlarmTile(alarm);
+                    return _buildAlarmCard(alarm, cardColor, textColor, subTextColor);
                   },
                 ),
         );
@@ -83,7 +84,7 @@ class AlarmListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAlarmTile(AlarmModel alarm) {
+  Widget _buildAlarmCard(AlarmModel alarm, Color cardColor, Color textColor, Color subTextColor) {
     Color severityColor;
     if (alarm.severity == 'critical') {
       severityColor = AppColors.alarm;
@@ -98,7 +99,7 @@ class AlarmListScreen extends StatelessWidget {
         : null;
 
     return Card(
-      color: AppColors.cardDark,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -130,8 +131,8 @@ class AlarmListScreen extends StatelessWidget {
                           alarm.alarmType,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -160,27 +161,27 @@ class AlarmListScreen extends StatelessWidget {
                     alarm.message,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: subTextColor, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                      Icon(Icons.access_time_rounded, size: 14, color: subTextColor),
                       const SizedBox(width: 4),
                       Text(
                         alarm.timestamp,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                        style: TextStyle(color: subTextColor, fontSize: 11),
                       ),
                       if (cameraText != null) ...[
                         const SizedBox(width: 12),
-                        const Icon(Icons.videocam_outlined, size: 14, color: AppColors.textSecondary),
+                        Icon(Icons.videocam_outlined, size: 14, color: subTextColor),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             cameraText,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                            style: TextStyle(color: subTextColor, fontSize: 11),
                           ),
                         ),
                       ],
