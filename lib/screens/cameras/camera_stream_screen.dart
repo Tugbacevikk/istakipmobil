@@ -248,15 +248,21 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: const [
-                    Icon(Icons.camera_front_rounded, color: AppColors.cyanAccent, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Ana Sunucu Kamera Yayını (Localhost)',
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: const [
+                      Icon(Icons.camera_front_rounded, color: AppColors.cyanAccent, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Ana Sunucu Kamera Yayını (Localhost)',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -322,15 +328,21 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${camera.name} (${camera.ipAddress ?? "Yerel IP"})',
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${camera.name} (${camera.ipAddress ?? "Yerel IP"})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Row(
                   children: [
