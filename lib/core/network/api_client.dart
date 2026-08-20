@@ -23,7 +23,7 @@ class ApiClient {
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
-      followRedirects: false,
+      followRedirects: true,
       validateStatus: (status) => status != null && status < 500,
     ));
 
@@ -144,11 +144,19 @@ class ApiClient {
     try {
       await dio.post(
         '/login',
-        data: FormData.fromMap({
+        data: {
           'username': username,
+          'kullanici_adi': username,
           'password': password,
-        }),
+          'sifre': password,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          followRedirects: true,
+          validateStatus: (status) => status != null && status < 500,
+        ),
       );
+
       final testResponse = await dio.get('/api/camera/status');
       if (testResponse.statusCode == 200) {
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: '');
