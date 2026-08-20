@@ -224,8 +224,17 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                       )
                     else
                       ...cameras.map((camera) {
-                        final proxyUrl = '$serverUrl/api/proxy_feed/${camera.id}';
-                        return _buildCameraCard(context, camera, proxyUrl, isAdmin, cardColor, textColor, borderColor);
+                        String streamUrl;
+                        final ip = camera.ipAddress?.trim() ?? '';
+                        if (ip.startsWith('http://') || ip.startsWith('https://')) {
+                          streamUrl = ip;
+                        } else if (ip.contains(':') || ip.split('.').length == 4) {
+                          final cleanIp = ip.startsWith('http') ? ip : 'http://$ip';
+                          streamUrl = cleanIp.endsWith('/video_feed') ? cleanIp : '$cleanIp:5000/video_feed';
+                        } else {
+                          streamUrl = '$serverUrl/api/proxy_feed/${camera.id}';
+                        }
+                        return _buildCameraCard(context, camera, streamUrl, isAdmin, cardColor, textColor, borderColor);
                       }),
                   ],
                 ),
