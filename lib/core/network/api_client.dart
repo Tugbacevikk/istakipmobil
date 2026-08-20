@@ -340,8 +340,15 @@ class ApiClient {
 
       final response = await dio.get('/api/reports/worker_stats', queryParameters: queryParams);
       final data = _parseResponseData(response.data);
-      if (response.statusCode == 200 && data is List) {
-        return data.map((x) => Map<String, dynamic>.from(x)).toList();
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data.map((x) => Map<String, dynamic>.from(x)).toList();
+        } else if (data is Map) {
+          final list = data['workers'] ?? data['data'];
+          if (list is List) {
+            return list.map((x) => Map<String, dynamic>.from(x)).toList();
+          }
+        }
       }
     } catch (_) {}
     return [];
