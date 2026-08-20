@@ -32,7 +32,7 @@ class DashboardScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      provider.isAdmin ? '👑 Admin Hesabı' : '👔 Patron Hesabı',
+                      provider.isAdmin ? '👑 Admin (Tam Yetki)' : '👔 Patron (${provider.username}) • Saha Yetkisi',
                       style: TextStyle(
                         fontSize: 11,
                         color: provider.isAdmin ? AppColors.cyanAccent : Colors.orangeAccent,
