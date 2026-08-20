@@ -24,6 +24,7 @@ class ApiClient {
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
       followRedirects: true,
+      extra: {'withCredentials': true},
       validateStatus: (status) => status != null && status < 500,
     ));
 
@@ -56,6 +57,7 @@ class ApiClient {
         baseUrl: targetUrl,
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 5),
+        extra: {'withCredentials': true},
         validateStatus: (status) => status != null && status < 500,
       ));
       final response = await dio.get('/api/camera/status');
@@ -66,6 +68,7 @@ class ApiClient {
           baseUrl: targetUrl,
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
+          extra: {'withCredentials': true},
           validateStatus: (status) => status != null && status < 500,
         ));
         final response = await dio.get('/');
@@ -142,7 +145,7 @@ class ApiClient {
   static Future<bool> login(String username, String password) async {
     final dio = await _getSharedDio();
     try {
-      await dio.post(
+      final loginRes = await dio.post(
         '/login',
         data: {
           'username': username,
@@ -153,12 +156,20 @@ class ApiClient {
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           followRedirects: true,
+          extra: {'withCredentials': true},
           validateStatus: (status) => status != null && status < 500,
         ),
       );
 
-      final testResponse = await dio.get('/api/camera/status');
-      if (testResponse.statusCode == 200) {
+      final testResponse = await dio.get(
+        '/api/camera/status',
+        options: Options(extra: {'withCredentials': true}),
+      );
+      if (testResponse.statusCode == 200 || loginRes.statusCode == 302 || loginRes.statusCode == 200) {
+        final bodyText = loginRes.data?.toString() ?? '';
+        if (bodyText.contains('Kullanıcı adı veya şifre hatalı') || bodyText.contains('hesabınız henüz onaylanmadı')) {
+          return false;
+        }
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: '');
         return true;
       }
