@@ -72,6 +72,20 @@ class DashboardScreen extends StatelessWidget {
                 icon: const Icon(Icons.refresh_rounded, color: AppColors.textPrimary),
                 onPressed: provider.refreshData,
               ),
+              IconButton(
+                icon: const Icon(Icons.logout_rounded, color: AppColors.alarm),
+                onPressed: () async {
+                  await SettingsStorage.logout();
+                  await ApiClient.resetClient();
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  }
+                },
+                tooltip: 'Oturumu Kapat / Çıkış Yap',
+              ),
             ],
           ),
           body: RefreshIndicator(

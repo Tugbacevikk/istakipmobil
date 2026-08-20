@@ -175,6 +175,36 @@ class ApiClient {
     return [];
   }
 
+  static Future<bool> approveUser(int userId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/users/$userId/approve');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> rejectUser(int userId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/users/$userId/reject');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> deleteUser(int userId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/users/$userId/delete');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<List<CameraModel>> fetchCameras() async {
     try {
       final dio = await _getSharedDio();
