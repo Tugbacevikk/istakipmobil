@@ -145,7 +145,6 @@ class ApiClient {
   static Future<bool> login(String username, String password) async {
     final dio = await _getSharedDio();
     try {
-      // Build explicit urlencoded string for cross-platform form submission
       final formString = 'username=${Uri.encodeQueryComponent(username)}&password=${Uri.encodeQueryComponent(password)}&kullanici_adi=${Uri.encodeQueryComponent(username)}&sifre=${Uri.encodeQueryComponent(password)}';
 
       final loginRes = await dio.post(
@@ -159,26 +158,23 @@ class ApiClient {
         ),
       );
 
+      final bodyText = loginRes.data?.toString() ?? '';
+      
+      if (bodyText.contains('Dashboard') || loginRes.realUri.path.contains('dashboard')) {
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
+        return true;
+      }
+
       final testResponse = await dio.get(
         '/api/camera/status',
         options: Options(extra: {'withCredentials': true}),
       );
 
-      final bodyText = loginRes.data?.toString() ?? '';
-      final isFailedMessage = bodyText.contains('Kullanıcı adı veya şifre hatalı') ||
-          bodyText.contains('hesabınız henüz onaylanmadı') ||
-          bodyText.contains('Başvurunuz reddedildi');
-
-      if (testResponse.statusCode == 200 && !isFailedMessage) {
+      if (testResponse.statusCode == 200) {
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
         return true;
       }
 
-      // Check if redirect to dashboard occurred
-      if ((loginRes.statusCode == 200 || loginRes.statusCode == 302) && !isFailedMessage) {
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
-        return true;
-      }
       return false;
     } catch (e) {
       return false;
