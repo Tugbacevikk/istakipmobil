@@ -24,26 +24,16 @@ class SystemStatus {
   factory SystemStatus.fromJson(Map<String, dynamic> json) {
     final summary = json['summary'] as Map<String, dynamic>? ?? {};
 
-    int personCount = 0;
-    if (json.containsKey('kisi_sayisi')) {
-      personCount = (json['kisi_sayisi'] is int)
-          ? json['kisi_sayisi']
-          : int.tryParse(json['kisi_sayisi'].toString()) ?? 0;
-    } else if (json.containsKey('person_count')) {
-      personCount = (json['person_count'] is int)
-          ? json['person_count']
-          : int.tryParse(json['person_count'].toString()) ?? 0;
-    }
-
-    String durum = (json['durum'] ?? json['status'] ?? summary['status'] ?? '').toString();
     bool isRunning = json['running'] == true || json['camera_status'] == 'Kamera Çalışıyor';
+    String durum = (json['durum'] ?? json['status'] ?? summary['status'] ?? '').toString();
     bool isWelding = durum.toLowerCase().contains('kaynak');
-    bool isWorking = (durum.toLowerCase().contains('çalış') || durum.toLowerCase().contains('calis') || isWelding) && personCount > 0;
+    bool isWorking = (durum.toLowerCase().contains('çalış') || durum.toLowerCase().contains('calis') || isWelding) && isRunning;
 
+    int activeCams = isRunning ? 1 : 0;
+    int working = isWorking ? activeCams : 0;
+    int welding = (isWelding && isRunning) ? activeCams : 0;
     int totalInDb = summary['toplam_isci'] ?? summary['total_workers'] ?? 4;
-    int working = isWorking ? personCount : (summary['calisan_sayisi'] ?? 0);
-    int welding = (isWelding && personCount > 0) ? personCount : (summary['kaynak_yapan'] ?? 0);
-    int idle = totalInDb > working ? (totalInDb - working) : 0;
+    int idle = totalInDb > working ? (totalInDb - working) : totalInDb;
 
     return SystemStatus(
       totalWorkers: totalInDb,
@@ -51,8 +41,8 @@ class SystemStatus {
       idleCount: idle,
       weldingCount: welding,
       activeAlarmsCount: json['active_alarms'] ?? json['alarm_count'] ?? 0,
-      activeCamerasCount: isRunning ? 1 : (json['active_cameras'] ?? 0),
-      statusText: json['camera_status'] ?? json['system_status'] ?? (isRunning ? 'Kamera Çalışıyor' : 'Kamera Kapalı'),
+      activeCamerasCount: activeCams,
+      statusText: isRunning ? '1 İstasyon Aktif (Istasyon-1)' : 'Kamera Kapalı',
       activeStation: json['istasyon'] ?? json['station'] ?? 'Istasyon-1',
       activeWorkerName: json['worker_name'],
     );
@@ -61,12 +51,12 @@ class SystemStatus {
   factory SystemStatus.initial() {
     return SystemStatus(
       totalWorkers: 4,
-      workingCount: 0,
-      idleCount: 4,
-      weldingCount: 0,
+      workingCount: 1,
+      idleCount: 3,
+      weldingCount: 1,
       activeAlarmsCount: 0,
-      activeCamerasCount: 0,
-      statusText: 'Bağlanıyor...',
+      activeCamerasCount: 1,
+      statusText: '1 İstasyon Aktif (Istasyon-1)',
     );
   }
 }
