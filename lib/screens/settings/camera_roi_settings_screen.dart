@@ -2,73 +2,84 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
 class CameraRoiSettingsScreen extends StatefulWidget {
-  const CameraRoiSettingsScreen({super.key});
+  final String? cameraName;
+  final String? streamUrl;
+
+  const CameraRoiSettingsScreen({
+    super.key,
+    this.cameraName,
+    this.streamUrl,
+  });
 
   @override
   State<CameraRoiSettingsScreen> createState() => _CameraRoiSettingsScreenState();
 }
 
 class _CameraRoiSettingsScreenState extends State<CameraRoiSettingsScreen> {
-  double _roiX = 0.10;
-  double _roiY = 0.15;
-  double _roiWidth = 0.80;
-  double _roiHeight = 0.70;
+  final double _roiX = 0.10;
+  final double _roiY = 0.15;
+  final double _roiWidth = 0.80;
+  final double _roiHeight = 0.70;
   double _alarmThresholdSeconds = 10;
   bool _weldingDetectionEnabled = true;
   bool _poseEstimationEnabled = true;
 
   @override
   Widget build(BuildContext context) {
+    final titleName = widget.cameraName ?? 'Kamera ROI & Bölge';
+
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        title: const Text('Kamera & ROI Bölge Ayarları', style: TextStyle(color: AppColors.textPrimary)),
+        title: Text(titleName, style: const TextStyle(color: AppColors.textPrimary)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Bölge (ROI - Region of Interest) Ayarları',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Kameraların takip edeceği istasyon çalışma sınırlarını ve ihlal alarm eşiklerini özelleştirin.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 20),
-
-            // Visual ROI Box Preview
             Container(
-              height: 200,
-              width: double.infinity,
+              height: 220,
               decoration: BoxDecoration(
-                color: Colors.black,
+                color: AppColors.cardDark,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.cardBorder),
               ),
               child: Stack(
                 children: [
-                  const Center(
-                    child: Icon(Icons.videocam_rounded, color: Colors.white24, size: 64),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.videocam_rounded, size: 48, color: AppColors.cyanAccent),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Kamera Görüntü Önizleme (${widget.cameraName ?? "Istasyon-1"})',
+                          style: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
                   Positioned(
-                    left: 200 * _roiX,
-                    top: 200 * _roiY,
-                    width: 300 * _roiWidth,
-                    height: 200 * _roiHeight,
+                    left: _roiX * 300,
+                    top: _roiY * 180,
+                    width: _roiWidth * 300,
+                    height: _roiHeight * 180,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.cyanAccent.withOpacity(0.2),
-                        border: Border.all(color: AppColors.cyanAccent, width: 2),
+                        border: Border.all(color: Colors.redAccent, width: 2),
+                        color: Colors.redAccent.withValues(alpha: 0.2),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'ROI İstasyon Bölgesi',
-                          style: TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 11),
+                      child: const Align(
+                        alignment: Alignment.topLeft,
+                        child: Container(
+                          color: Colors.redAccent,
+                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            'ROI BÖLGESİ (Tehlikeli Alan)',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -78,67 +89,66 @@ class _CameraRoiSettingsScreenState extends State<CameraRoiSettingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ROI Sliders
-            _buildSlider('İstasyon X Konumu', _roiX, (v) => setState(() => _roiX = v)),
-            _buildSlider('İstasyon Y Konumu', _roiY, (v) => setState(() => _roiY = v)),
-            _buildSlider('Duruş Alarm Eşiği (${_alarmThresholdSeconds.toInt()} sn)', _alarmThresholdSeconds / 60, (v) {
-              setState(() => _alarmThresholdSeconds = (v * 60).clamp(5, 60));
-            }),
-            const SizedBox(height: 16),
+            const Text(
+              'Yapay Zeka Tespiti & Alarm Ayarları',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 12),
 
-            // AI Model Switches
             SwitchListTile(
-              title: const Text('YOLOv8 Kaynak (Welding) Tespiti', style: TextStyle(color: AppColors.textPrimary)),
-              subtitle: const Text('Kıvılcım ve kaynak işlemlerini otomatik algıla', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              title: const Text('Kaynak Yapma Algılama AI', style: TextStyle(color: AppColors.textPrimary)),
+              subtitle: const Text('Görüntüdeki kaynak alevi ve kaskını tespit eder', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               value: _weldingDetectionEnabled,
-              activeColor: AppColors.cyanAccent,
-              onChanged: (v) => setState(() => _weldingDetectionEnabled = v),
+              activeThumbColor: AppColors.primary,
+              onChanged: (val) => setState(() => _weldingDetectionEnabled = val),
             ),
             SwitchListTile(
-              title: const Text('YOLOv8 Pose Estimation (Duruş Takibi)', style: TextStyle(color: AppColors.textPrimary)),
-              subtitle: const Text('İskelet ve pozisyon takibi yap', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              title: const Text('İnsan İskelet & Duruş Analizi (Pose Estimation)', style: TextStyle(color: AppColors.textPrimary)),
+              subtitle: const Text('Yatarak veya hareketsiz duruşlarda alarm üretir', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               value: _poseEstimationEnabled,
-              activeColor: AppColors.cyanAccent,
-              onChanged: (v) => setState(() => _poseEstimationEnabled = v),
+              activeThumbColor: AppColors.primary,
+              onChanged: (val) => setState(() => _poseEstimationEnabled = val),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+
+            Text(
+              'Hareketsizlik Alarm Eşiği: ${_alarmThresholdSeconds.toInt()} Saniye',
+              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+            ),
+            Slider(
+              value: _alarmThresholdSeconds,
+              min: 5,
+              max: 60,
+              divisions: 11,
+              activeColor: AppColors.primary,
+              onChanged: (val) => setState(() => _alarmThresholdSeconds = val),
+            ),
+            const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 48,
               child: ElevatedButton.icon(
+                icon: const Icon(Icons.save_rounded, color: Colors.white),
+                label: const Text('Bölge Ayarlarını Kaydet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ROI ve Yapay Zeka ayarları kaydedildi.'), backgroundColor: AppColors.working),
+                    const SnackBar(
+                      content: Text('Bölge ayarları kaydedildi.'),
+                      backgroundColor: AppColors.working,
+                    ),
                   );
                   Navigator.pop(context);
                 },
-                icon: const Icon(Icons.save_rounded, color: Colors.white),
-                label: const Text('AYARLARI KAYDET', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brandRedLight,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSlider(String title, double val, ValueChanged<double> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
-        Slider(
-          value: val,
-          onChanged: onChanged,
-          activeColor: AppColors.cyanAccent,
-          inactiveColor: AppColors.cardBorder,
-        ),
-      ],
     );
   }
 }
