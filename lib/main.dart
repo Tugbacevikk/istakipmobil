@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
 import 'providers/app_provider.dart';
-import 'screens/home_shell.dart';
+import 'screens/auth/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,13 +26,12 @@ class IsTakipApp extends StatelessWidget {
           primaryColor: AppColors.primary,
           colorScheme: const ColorScheme.dark(
             primary: AppColors.primary,
-            secondary: AppColors.accent,
+            secondary: AppColors.cyanAccent,
             surface: AppColors.cardDark,
-            background: AppColors.bgDark,
           ),
           fontFamily: 'Roboto',
         ),
-        home: const HomeShell(),
+        home: const LoginScreen(),
       ),
     );
   }

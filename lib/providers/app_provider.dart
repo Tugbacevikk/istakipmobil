@@ -3,6 +3,7 @@ import '../models/system_status.dart';
 import '../models/worker.dart';
 import '../models/alarm.dart';
 import '../models/camera.dart';
+import '../models/user_model.dart';
 import '../core/network/api_client.dart';
 import '../core/network/socket_service.dart';
 import '../core/storage/settings_storage.dart';
@@ -12,6 +13,7 @@ class AppProvider extends ChangeNotifier {
   List<WorkerModel> _workers = [];
   List<AlarmModel> _alarms = [];
   List<CameraModel> _cameras = [];
+  List<UserModel> _users = [];
 
   bool _isLoading = false;
   bool _isConnected = false;
@@ -21,6 +23,7 @@ class AppProvider extends ChangeNotifier {
   List<WorkerModel> get workers => _workers;
   List<AlarmModel> get alarms => _alarms;
   List<CameraModel> get cameras => _cameras;
+  List<UserModel> get users => _users;
 
   bool get isLoading => _isLoading;
   bool get isConnected => _isConnected;
@@ -64,6 +67,7 @@ class AppProvider extends ChangeNotifier {
     _workers = await ApiClient.fetchWorkers();
     _alarms = await ApiClient.fetchAlarms();
     _cameras = await ApiClient.fetchCameras();
+    _users = await ApiClient.fetchUsers();
     notifyListeners();
   }
 

@@ -18,7 +18,6 @@ class SystemStatus {
   });
 
   factory SystemStatus.fromJson(Map<String, dynamic> json) {
-    final status = json['status'] as Map<String, dynamic>? ?? {};
     final summary = json['summary'] as Map<String, dynamic>? ?? {};
     
     return SystemStatus(

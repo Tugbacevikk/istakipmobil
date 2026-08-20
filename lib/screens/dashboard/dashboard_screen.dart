@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/app_provider.dart';
 import '../settings/server_settings_screen.dart';
+import '../users/user_management_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -29,6 +30,16 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.manage_accounts_rounded, color: AppColors.textPrimary),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UserManagementScreen()),
+                  );
+                },
+                tooltip: 'Kullanıcı & Yönetici Hesapları',
+              ),
               IconButton(
                 icon: Icon(
                   isConnected ? Icons.wifi_rounded : Icons.wifi_off_rounded,

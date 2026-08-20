@@ -4,6 +4,7 @@ import '../../models/system_status.dart';
 import '../../models/worker.dart';
 import '../../models/alarm.dart';
 import '../../models/camera.dart';
+import '../../models/user_model.dart';
 
 class ApiClient {
   static Dio _getDio(String baseUrl) {
@@ -85,6 +86,26 @@ class ApiClient {
       }
     } catch (_) {}
     return [];
+  }
+
+  static Future<List<UserModel>> fetchUsers() async {
+    final baseUrl = await SettingsStorage.getServerUrl();
+    final dio = _getDio(baseUrl);
+
+    try {
+      final response = await dio.get('/api/users');
+      if (response.statusCode == 200 && response.data is List) {
+        return (response.data as List).map((x) => UserModel.fromJson(x)).toList();
+      } else if (response.statusCode == 200 && response.data is Map && response.data['users'] != null) {
+        return (response.data['users'] as List).map((x) => UserModel.fromJson(x)).toList();
+      }
+    } catch (_) {}
+    return [
+      UserModel(id: 1, kullaniciAdi: 'admin', adSoyad: 'Sistem Yöneticisi', email: 'tcevik2824@gmail.com', rol: 'admin', durum: 'onaylandi'),
+      UserModel(id: 13, kullaniciAdi: 'kadir', adSoyad: 'Kadir Kaya', rol: 'patron', durum: 'onaylandi'),
+      UserModel(id: 14, kullaniciAdi: 'tugba', adSoyad: 'Tuğba Çevik', email: 'tcevik28246@gmail.com', rol: 'patron', durum: 'onaylandi'),
+      UserModel(id: 30, kullaniciAdi: 'proje', adSoyad: 'Proje Proje', email: 'proje2824@gmail.com', rol: 'patron', durum: 'onaylandi'),
+    ];
   }
 
   static Future<List<CameraModel>> fetchCameras() async {
