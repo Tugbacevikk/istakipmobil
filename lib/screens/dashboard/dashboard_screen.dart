@@ -5,6 +5,7 @@ import '../../core/network/api_client.dart';
 import '../../core/storage/settings_storage.dart';
 import '../../providers/app_provider.dart';
 import '../auth/login_screen.dart';
+import '../profile/profile_settings_screen.dart';
 import '../settings/server_settings_screen.dart';
 import '../users/user_management_screen.dart';
 
@@ -47,6 +48,16 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.person_outline_rounded, color: AppColors.cyanAccent),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()),
+                  );
+                },
+                tooltip: 'Profil & Şifre Değiştirme',
+              ),
               if (provider.isAdmin)
                 IconButton(
                   icon: const Icon(Icons.manage_accounts_rounded, color: AppColors.textPrimary),

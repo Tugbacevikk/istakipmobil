@@ -364,6 +364,36 @@ class ApiClient {
     return [];
   }
 
+  static Future<bool> updateProfileEmail(String email) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post(
+        '/api/profile/update_email',
+        data: {'email': email},
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> changePassword(String currentPassword, String newPassword) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post(
+        '/api/profile/change_password',
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirm': newPassword,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<bool> markAlarmsRead() async {
     try {
       final dio = await _getSharedDio();
