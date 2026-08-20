@@ -36,12 +36,13 @@ class SystemStatus {
     }
 
     String durum = (json['durum'] ?? json['status'] ?? summary['status'] ?? '').toString();
-    bool isWelding = durum.contains('Kaynak');
-    bool isWorking = durum.contains('Çalış') || durum.contains('Calis') || isWelding || personCount > 0;
+    bool isRunning = json['running'] == true || json['camera_status'] == 'Kamera Çalışıyor';
+    bool isWelding = durum.toLowerCase().contains('kaynak');
+    bool isWorking = (durum.toLowerCase().contains('çalış') || durum.toLowerCase().contains('calis') || isWelding) && personCount > 0;
 
     int totalInDb = summary['toplam_isci'] ?? summary['total_workers'] ?? 4;
-    int working = isWorking ? (personCount > 0 ? personCount : 1) : (summary['calisan_sayisi'] ?? 0);
-    int welding = isWelding ? (personCount > 0 ? personCount : 1) : (summary['kaynak_yapan'] ?? 0);
+    int working = isWorking ? personCount : (summary['calisan_sayisi'] ?? 0);
+    int welding = (isWelding && personCount > 0) ? personCount : (summary['kaynak_yapan'] ?? 0);
     int idle = totalInDb > working ? (totalInDb - working) : 0;
 
     return SystemStatus(
@@ -50,8 +51,8 @@ class SystemStatus {
       idleCount: idle,
       weldingCount: welding,
       activeAlarmsCount: json['active_alarms'] ?? json['alarm_count'] ?? 0,
-      activeCamerasCount: json['active_cameras'] ?? json['camera_count'] ?? 1,
-      statusText: json['camera_status'] ?? json['system_status'] ?? 'Kamera Çalışıyor',
+      activeCamerasCount: isRunning ? 1 : (json['active_cameras'] ?? 0),
+      statusText: json['camera_status'] ?? json['system_status'] ?? (isRunning ? 'Kamera Çalışıyor' : 'Kamera Kapalı'),
       activeStation: json['istasyon'] ?? json['station'] ?? 'Istasyon-1',
       activeWorkerName: json['worker_name'],
     );
@@ -60,11 +61,11 @@ class SystemStatus {
   factory SystemStatus.initial() {
     return SystemStatus(
       totalWorkers: 4,
-      workingCount: 1,
-      idleCount: 3,
-      weldingCount: 1,
+      workingCount: 0,
+      idleCount: 4,
+      weldingCount: 0,
       activeAlarmsCount: 0,
-      activeCamerasCount: 1,
+      activeCamerasCount: 0,
       statusText: 'Bağlanıyor...',
     );
   }

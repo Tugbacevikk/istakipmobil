@@ -113,9 +113,9 @@ class AppProvider extends ChangeNotifier {
     }
 
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
-    final liveWorking = fetchedStatus.workingCount > 0 ? fetchedStatus.workingCount : 1;
-    final liveWelding = fetchedStatus.weldingCount > 0 ? fetchedStatus.weldingCount : 1;
-    final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
+    final liveWorking = fetchedStatus.workingCount;
+    final liveWelding = fetchedStatus.weldingCount;
+    final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : totalW;
 
     _status = SystemStatus(
       totalWorkers: totalW,
@@ -151,9 +151,9 @@ class AppProvider extends ChangeNotifier {
       }
 
       final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
-      final liveWorking = fetchedStatus.workingCount > 0 ? fetchedStatus.workingCount : 1;
-      final liveWelding = fetchedStatus.weldingCount > 0 ? fetchedStatus.weldingCount : 1;
-      final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
+      final liveWorking = fetchedStatus.workingCount;
+      final liveWelding = fetchedStatus.weldingCount;
+      final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : totalW;
 
       _status = SystemStatus(
         totalWorkers: totalW,
