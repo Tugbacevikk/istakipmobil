@@ -89,6 +89,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const UserManagementScreen()));
               } else if (value == 'server') {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ServerSettingsScreen()));
+              } else if (value == 'theme') {
+                provider.toggleTheme();
               } else if (value == 'logout') {
                 await SettingsStorage.logout();
                 await ApiClient.resetClient();
@@ -98,6 +100,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               }
             },
             itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'theme',
+                child: Row(
+                  children: [
+                    Icon(
+                      provider.isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                      color: provider.isDarkMode ? Colors.amber : AppColors.cyanAccent,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      provider.isDarkMode ? '☀️ Aydınlık Tema' : '🌙 Koyu Tema',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'profile',
                 child: Row(

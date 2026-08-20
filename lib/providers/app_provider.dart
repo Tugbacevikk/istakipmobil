@@ -18,6 +18,7 @@ class AppProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   bool _isConnected = false;
+  bool _isDarkMode = true;
   String _serverUrl = SettingsStorage.defaultServerUrl;
 
   String _userRole = 'user';
@@ -33,6 +34,7 @@ class AppProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   bool get isConnected => _isConnected;
+  bool get isDarkMode => _isDarkMode;
   String get serverUrl => _serverUrl;
 
   String get userRole => _userRole;
@@ -46,11 +48,18 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> toggleTheme() async {
+    _isDarkMode = !_isDarkMode;
+    await SettingsStorage.setDarkMode(_isDarkMode);
+    notifyListeners();
+  }
+
   AppProvider() {
     init();
   }
 
   Future<void> init() async {
+    _isDarkMode = await SettingsStorage.isDarkMode();
     _serverUrl = await SettingsStorage.getServerUrl();
     _username = (await SettingsStorage.getUsername()) ?? '';
     _userRole = (await SettingsStorage.getUserRole()) ?? (_username == 'admin' ? 'admin' : 'patron');

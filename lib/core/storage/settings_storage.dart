@@ -60,4 +60,16 @@ class SettingsStorage {
     await prefs.remove(_keyUsername);
     await prefs.remove(_keyUserRole);
   }
+
+  static const String _keyIsDarkMode = 'is_dark_mode';
+
+  static Future<bool> isDarkMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyIsDarkMode) ?? true;
+  }
+
+  static Future<void> setDarkMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyIsDarkMode, isDark);
+  }
 }
