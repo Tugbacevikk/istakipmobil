@@ -136,11 +136,18 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
         final serverUrl = provider.serverUrl;
         final isAdmin = provider.isAdmin;
 
+        final isDark = provider.isDarkMode;
+        final bgColor = AppColors.getBg(isDark);
+        final cardColor = AppColors.getCard(isDark);
+        final textColor = AppColors.getText(isDark);
+        final subTextColor = AppColors.getSubText(isDark);
+        final borderColor = AppColors.getBorder(isDark);
+
         return Scaffold(
-          backgroundColor: AppColors.bgDark,
+          backgroundColor: bgColor,
           appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            title: const Text('Canlı Saha Kameraları', style: TextStyle(color: AppColors.textPrimary)),
+            backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+            title: const Text('Canlı Saha Kameraları', style: TextStyle(color: Colors.white)),
             actions: [
               if (isAdmin)
                 IconButton(
@@ -165,19 +172,19 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.cardDark,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.cardBorder),
+                        border: Border.all(color: borderColor),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.cyanAccent.withValues(alpha: 0.15),
+                              color: AppColors.brandRedLight.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 28),
+                            child: const Icon(Icons.videocam_rounded, color: AppColors.brandRedLight, size: 28),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -186,12 +193,12 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                               children: [
                                 Text(
                                   'Saha Kameraları (${cameras.length} Kanal Bağlı)',
-                                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   isAdmin ? 'Yerel veya IP kameraların canlı akışını izleyin ve yönetin.' : 'Yetkili olduğunuz kameraların 7/24 canlı akışı.',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                  style: TextStyle(color: subTextColor, fontSize: 12),
                                 ),
                               ],
                             ),
@@ -202,23 +209,23 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                     const SizedBox(height: 20),
 
                     // Default Localhost Camera (Ana Sunucu / Webcam Akışı)
-                    _buildLocalhostWebcamCard(context, serverUrl, isAdmin),
+                    _buildLocalhostWebcamCard(context, serverUrl, isAdmin, cardColor, textColor, borderColor),
                     const SizedBox(height: 16),
 
                     if (cameras.isEmpty)
-                      const Center(
+                      Center(
                         child: Padding(
-                          padding: EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(20),
                           child: Text(
                             'Kayıtlı diğer ek kameralar yükleniyor...',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            style: TextStyle(color: subTextColor),
                           ),
                         ),
                       )
                     else
                       ...cameras.map((camera) {
                         final proxyUrl = '$serverUrl/api/proxy_feed/${camera.id}';
-                        return _buildCameraCard(context, camera, proxyUrl, isAdmin);
+                        return _buildCameraCard(context, camera, proxyUrl, isAdmin, cardColor, textColor, borderColor);
                       }),
                   ],
                 ),
@@ -235,14 +242,14 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     );
   }
 
-  Widget _buildLocalhostWebcamCard(BuildContext context, String serverUrl, bool isAdmin) {
+  Widget _buildLocalhostWebcamCard(BuildContext context, String serverUrl, bool isAdmin, Color cardColor, Color textColor, Color borderColor) {
     final streamUrl = '$serverUrl/video_feed';
-
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.cyanAccent.withValues(alpha: 0.6), width: 1.5),
+        border: Border.all(color: AppColors.brandRedLight.withValues(alpha: 0.6), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,15 +261,15 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
               children: [
                 Expanded(
                   child: Row(
-                    children: const [
-                      Icon(Icons.camera_front_rounded, color: AppColors.cyanAccent, size: 20),
-                      SizedBox(width: 8),
+                    children: [
+                      const Icon(Icons.camera_front_rounded, color: AppColors.brandRedLight, size: 20),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Ana Sunucu Kamera Yayını (Localhost)',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ),
                     ],
@@ -285,13 +292,13 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     );
   }
 
-  Widget _buildCameraCard(BuildContext context, CameraModel camera, String streamUrl, bool isAdmin) {
+  Widget _buildCameraCard(BuildContext context, CameraModel camera, String streamUrl, bool isAdmin, Color cardColor, Color textColor, Color borderColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

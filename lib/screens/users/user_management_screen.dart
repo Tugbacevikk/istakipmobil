@@ -211,11 +211,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         final users = provider.users;
         final pendingUsers = users.where((u) => u.durum == 'onay_bekliyor' || u.durum == 'bekliyor').toList();
 
+        final isDark = provider.isDarkMode;
+        final bgColor = AppColors.getBg(isDark);
+        final cardColor = AppColors.getCard(isDark);
+        final textColor = AppColors.getText(isDark);
+        final subTextColor = AppColors.getSubText(isDark);
+        final borderColor = AppColors.getBorder(isDark);
+
         return Scaffold(
-          backgroundColor: AppColors.bgDark,
+          backgroundColor: bgColor,
           appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            title: const Text('Patron Yetkilendirme & Üye Onayları', style: TextStyle(color: AppColors.textPrimary)),
+            backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+            title: const Text('Patron Yetkilendirme & Üye Onayları', style: TextStyle(color: Colors.white)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
@@ -249,7 +256,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   // Header Summary
                   Container(
                     padding: const EdgeInsets.all(16),
-                    color: AppColors.cardDark,
+                    color: cardColor,
                     child: Row(
                       children: [
                         Container(
@@ -267,11 +274,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             children: [
                               Text(
                                 'Üye Kayıt Onayları (${users.length} Kayıt)',
-                                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                                style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
-                              const Text(
+                              Text(
                                 'Patronların izleyebilecekleri istasyon yetkilerini tanımlayın ve düzenleyin.',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                style: TextStyle(color: subTextColor, fontSize: 12),
                               ),
                             ],
                           ),
@@ -291,7 +298,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             itemCount: users.length,
                             itemBuilder: (context, index) {
                               final user = users[index];
-                              return _buildUserTile(user);
+                              return _buildUserTile(user, cardColor, textColor, subTextColor, borderColor, bgColor);
                             },
                           ),
                   ),
@@ -309,7 +316,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  Widget _buildUserTile(UserModel user) {
+  Widget _buildUserTile(UserModel user, Color cardColor, Color textColor, Color subTextColor, Color borderColor, Color bgColor) {
     Color roleColor;
     IconData roleIcon;
 
@@ -342,11 +349,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     }
 
     return Card(
-      color: AppColors.cardDark,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isPending ? AppColors.idle : AppColors.cardBorder, width: isPending ? 2 : 1),
+        side: BorderSide(color: isPending ? AppColors.idle : borderColor, width: isPending ? 2 : 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -367,17 +374,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     children: [
                       Text(
                         user.adSoyad,
-                        style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '@${user.kullaniciAdi} • ${user.email ?? "E-Posta Yok"}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(color: subTextColor, fontSize: 12),
                       ),
                       if (user.firmaAdi != null && user.firmaAdi!.isNotEmpty)
                         Text(
                           'Firma / Birim: ${user.firmaAdi}',
-                          style: const TextStyle(color: AppColors.cyanAccent, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: roleColor, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                     ],
                   ),
@@ -402,18 +409,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.bgDark,
+                  color: bgColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.cardBorder),
+                  border: Border.all(color: borderColor),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 14),
+                    const Icon(Icons.videocam_rounded, color: AppColors.working, size: 14),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Yetkili İstasyonlar: ${user.istasyonlar}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                        style: TextStyle(color: subTextColor, fontSize: 11),
                       ),
                     ),
                   ],
@@ -422,7 +429,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ],
 
             const SizedBox(height: 10),
-            const Divider(color: AppColors.cardBorder, height: 1),
+            Divider(color: borderColor, height: 1),
             const SizedBox(height: 8),
 
             // Actions: Approve / Edit Stations / Reject / Delete

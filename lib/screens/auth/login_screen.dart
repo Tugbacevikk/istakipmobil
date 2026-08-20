@@ -59,15 +59,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final isDark = provider.isDarkMode;
+
+    final bgColor = AppColors.getBg(isDark);
+    final cardColor = AppColors.getCard(isDark);
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final borderColor = AppColors.getBorder(isDark);
+
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: bgColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top Red Brand Header Panel (Matching login.html)
+            // Top Red Brand Header Panel (With ÜÇGE Official Logo)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 36),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColors.brandRedDark, AppColors.brandRedLight],
@@ -97,13 +106,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
+                  // ÜÇGE Official Logo Container
                   Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                    width: 96,
+                    height: 96,
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+                      ],
                     ),
-                    child: const Icon(Icons.factory_rounded, color: Colors.white, size: 54),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/ucge_logo.jpg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -115,11 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Endüstriyel Yapay Zeka & Saha İzleme',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
                 ],
               ),
             ),
@@ -130,88 +145,28 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Hesabınıza Giriş Yapın',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Devam etmek için kullanıcı bilgilerinizi girin',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: subTextColor, fontSize: 13),
                   ),
                   const SizedBox(height: 24),
-
-                  // Username Field
-                  TextField(
-                    controller: _usernameController,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Kullanıcı Adı',
-                      labelStyle: const TextStyle(color: AppColors.textSecondary),
-                      prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.brandRedLight),
-                      filled: true,
-                      fillColor: AppColors.cardDark,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.cardBorder),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.cardBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.brandRedLight, width: 2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Password Field
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Şifre',
-                      labelStyle: const TextStyle(color: AppColors.textSecondary),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.brandRedLight),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: AppColors.textSecondary,
-                        ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                      filled: true,
-                      fillColor: AppColors.cardDark,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.cardBorder),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.cardBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.brandRedLight, width: 2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
 
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.alarm.withOpacity(0.15),
+                        color: AppColors.alarm.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.alarm),
+                        border: Border.all(color: AppColors.alarm.withValues(alpha: 0.4)),
                       ),
                       child: Row(
                         children: [
@@ -229,6 +184,68 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
+                  // Username Field
+                  TextField(
+                    controller: _usernameController,
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
+                      hintText: 'Kullanıcı Adı',
+                      hintStyle: TextStyle(color: subTextColor, fontSize: 14),
+                      prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.brandRedLight),
+                      filled: true,
+                      fillColor: cardColor,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.brandRedLight, width: 1.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Password Field
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
+                      hintText: 'Şifre',
+                      hintStyle: TextStyle(color: subTextColor, fontSize: 14),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.brandRedLight),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: subTextColor,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                      filled: true,
+                      fillColor: cardColor,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.brandRedLight, width: 1.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Login Button
                   SizedBox(
                     width: double.infinity,
@@ -237,11 +254,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.brandRedLight,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
                           : const Text(
                               'GİRİŞ YAP',
                               style: TextStyle(
@@ -255,13 +278,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Register link
+                  // Register Prompt
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Hesabınız yok mu? ',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: subTextColor, fontSize: 14),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -275,6 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             color: AppColors.brandRedLight,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                       ),

@@ -147,11 +147,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final idlePct = totalMin > 0 ? ((_idleMin / totalMin) * 100).toStringAsFixed(1) : '0';
     final weldingPct = totalMin > 0 ? ((_weldingMin / totalMin) * 100).toStringAsFixed(1) : '0';
 
+    final provider = context.watch<AppProvider>();
+    final isDark = provider.isDarkMode;
+    final bgColor = AppColors.getBg(isDark);
+    final cardColor = AppColors.getCard(isDark);
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final borderColor = AppColors.getBorder(isDark);
+
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: const Text('Raporlar & Saha Analitiği', style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+        title: const Text('Raporlar & Saha Analitiği', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.white),
@@ -160,10 +168,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.cyanAccent))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.brandRedLight))
           : RefreshIndicator(
               onRefresh: _loadReportData,
-              color: AppColors.cyanAccent,
+              color: AppColors.brandRedLight,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(

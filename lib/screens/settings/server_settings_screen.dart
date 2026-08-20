@@ -67,56 +67,64 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final isDark = provider.isDarkMode;
+    final bgColor = AppColors.getBg(isDark);
+    final cardColor = AppColors.getCard(isDark);
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final borderColor = AppColors.getBorder(isDark);
+
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: const Text('Sunucu Ayarları', style: TextStyle(color: AppColors.textPrimary)),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+        title: const Text('Sunucu Ayarları', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.dns_rounded, size: 64, color: AppColors.accent),
+            const Icon(Icons.dns_rounded, size: 64, color: AppColors.brandRedLight),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Flask API Sunucu Bağlantısı',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Fabrika İş Takip sisteminin çalıştığı sunucu IP adresini ve port numarasını girin (Örn: http://192.168.1.100:5000).',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: TextStyle(color: subTextColor, fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextField(
               controller: _urlController,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 labelText: 'Sunucu Adresi (URL / IP)',
-                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                labelStyle: TextStyle(color: subTextColor),
                 hintText: 'http://192.168.1.50:5000',
-                hintStyle: const TextStyle(color: AppColors.primaryLight),
-                prefixIcon: const Icon(Icons.link_rounded, color: AppColors.accent),
+                hintStyle: TextStyle(color: subTextColor.withValues(alpha: 0.6)),
+                prefixIcon: const Icon(Icons.link_rounded, color: AppColors.brandRedLight),
                 filled: true,
-                fillColor: AppColors.cardDark,
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.cardBorder),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.cardBorder),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.accent, width: 2),
+                  borderSide: const BorderSide(color: AppColors.brandRedLight, width: 2),
                 ),
               ),
             ),

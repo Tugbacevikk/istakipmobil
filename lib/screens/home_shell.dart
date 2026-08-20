@@ -29,6 +29,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
+    final isDark = provider.isDarkMode;
 
     // Clean unread alarms count excluding video test files and already read alarms
     final cleanUnreadAlarms = provider.alarms.where((a) {
@@ -43,6 +44,10 @@ class _HomeShellState extends State<HomeShell> {
     }).toList();
 
     final alarmCount = cleanUnreadAlarms.length;
+
+    final navBgColor = isDark ? AppColors.primary : Colors.white;
+    final navSelectedColor = isDark ? AppColors.cyanAccent : AppColors.brandRedLight;
+    final navUnselectedColor = isDark ? AppColors.textSecondary : const Color(0xFF64748B);
 
     return Scaffold(
       body: Stack(
@@ -126,64 +131,74 @@ class _HomeShellState extends State<HomeShell> {
             ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-          if (index == 3 && provider.latestAlarmMessage != null) {
-            provider.clearLatestAlarm();
-          }
-        },
-        backgroundColor: AppColors.primary,
-        selectedItemColor: AppColors.cyanAccent,
-        unselectedItemColor: AppColors.textSecondary,
-        type: BottomNavigationBarType.fixed,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Özet'),
-          const BottomNavigationBarItem(icon: Icon(Icons.videocam_rounded), label: 'Kameralar'),
-          const BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'İşçiler'),
-          BottomNavigationBarItem(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.notifications_rounded),
-                if (alarmCount > 0)
-                  Positioned(
-                    right: -8,
-                    top: -6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.primary, width: 1.5),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2)),
-                        ],
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Text(
-                        alarmCount > 99 ? '99+' : '$alarmCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.cardBorder : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
+          ),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+            if (index == 3 && provider.latestAlarmMessage != null) {
+              provider.clearLatestAlarm();
+            }
+          },
+          backgroundColor: navBgColor,
+          selectedItemColor: navSelectedColor,
+          unselectedItemColor: navUnselectedColor,
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 12,
+          unselectedFontSize: 12,
+          items: [
+            const BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Özet'),
+            const BottomNavigationBarItem(icon: Icon(Icons.videocam_rounded), label: 'Kameralar'),
+            const BottomNavigationBarItem(icon: Icon(Icons.people_alt_rounded), label: 'İşçiler'),
+            BottomNavigationBarItem(
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications_rounded),
+                  if (alarmCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandRedLight,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: navBgColor, width: 1.5),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          alarmCount > 99 ? '99+' : '$alarmCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+              label: 'Alarmlar',
             ),
-            label: 'Alarmlar',
-          ),
-          const BottomNavigationBarItem(icon: Icon(Icons.insert_chart_rounded), label: 'Raporlar'),
-        ],
+            const BottomNavigationBarItem(icon: Icon(Icons.insert_chart_rounded), label: 'Raporlar'),
+          ],
+        ),
       ),
     );
   }

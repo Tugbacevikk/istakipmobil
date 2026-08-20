@@ -121,11 +121,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final username = provider.username;
     final isAdmin = provider.isAdmin;
 
+    final isDark = provider.isDarkMode;
+    final bgColor = AppColors.getBg(isDark);
+    final cardColor = AppColors.getCard(isDark);
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final borderColor = AppColors.getBorder(isDark);
+
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: const Text('Profil & Güvenlik Ayarları', style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: isDark ? AppColors.primary : AppColors.brandRedDark,
+        title: const Text('Profil & Güvenlik Ayarları', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
@@ -137,9 +144,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.cardDark,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(color: borderColor),
               ),
               child: Row(
                 children: [
@@ -159,8 +166,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       children: [
                         Text(
                           username.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
@@ -171,14 +178,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: (isAdmin ? AppColors.brandRedLight : AppColors.cyanAccent).withValues(alpha: 0.15),
+                                color: (isAdmin ? AppColors.brandRedLight : AppColors.working).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: (isAdmin ? AppColors.brandRedLight : AppColors.cyanAccent).withValues(alpha: 0.4)),
+                                border: Border.all(color: (isAdmin ? AppColors.brandRedLight : AppColors.working).withValues(alpha: 0.4)),
                               ),
                               child: Text(
                                 isAdmin ? '👑 Admin (Tam Yetki)' : '👔 Patron Hesabı',
                                 style: TextStyle(
-                                  color: isAdmin ? AppColors.brandRedLight : AppColors.cyanAccent,
+                                  color: isAdmin ? AppColors.brandRedLight : AppColors.working,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,
                                 ),
@@ -195,31 +202,35 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             const SizedBox(height: 24),
 
             // E-mail Section
-            const Text(
+            Text(
               '✉️ E-Posta Adresi Güncelle',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.cardDark,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 children: [
                   TextField(
                     controller: _emailController,
-                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(color: textColor),
                     decoration: InputDecoration(
-                      hintText: 'Yeni E-Posta Adresiniz (Örn: isim@firma.com)',
-                      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                      prefixIcon: const Icon(Icons.email_outlined, color: AppColors.cyanAccent),
+                      hintText: 'Yeni E-Posta Adresiniz',
+                      hintStyle: TextStyle(color: subTextColor, fontSize: 14),
+                      prefixIcon: Icon(Icons.email_outlined, color: subTextColor),
                       filled: true,
-                      fillColor: AppColors.bgDark,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.cardBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                      fillColor: bgColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.cyanAccent)),
                     ),
                   ),
