@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:path_provider/path_provider.dart';
 import '../storage/settings_storage.dart';
 import '../../models/system_status.dart';
 import '../../models/worker.dart';
@@ -7,28 +10,55 @@ import '../../models/camera.dart';
 import '../../models/user_model.dart';
 
 class ApiClient {
-  static Dio _getDio(String baseUrl) {
-    return Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 8),
-        receiveTimeout: const Duration(seconds: 8),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
+  static Dio? _dio;
+  static PersistCookieJar? _cookieJar;
+
+  static Future<Dio> _getSharedDio() async {
+    if (_dio != null) return _dio!;
+
+    final baseUrl = await SettingsStorage.getServerUrl();
+    final appDocDir = await getApplicationDocumentsDirectory();
+    _cookieJar = PersistCookieJar(
+      storage: FileStorage('${appDocDir.path}/.cookies/'),
     );
+
+    _dio = Dio(BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
+      followRedirects: false,
+      validateStatus: (status) => status != null && status < 500,
+    ));
+    _dio!.interceptors.add(CookieManager(_cookieJar!));
+    return _dio!;
+  }
+
+  static Future<void> resetClient() async {
+    _dio = null;
+    if (_cookieJar != null) {
+      await _cookieJar!.deleteAll();
+    }
+    _cookieJar = null;
   }
 
   static Future<bool> testConnection(String targetUrl) async {
     try {
-      final dio = _getDio(targetUrl);
+      final dio = Dio(BaseOptions(
+        baseUrl: targetUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+        validateStatus: (status) => status != null && status < 500,
+      ));
       final response = await dio.get('/api/status');
       return response.statusCode == 200;
     } catch (_) {
       try {
-        final dio = _getDio(targetUrl);
+        final dio = Dio(BaseOptions(
+          baseUrl: targetUrl,
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+          validateStatus: (status) => status != null && status < 500,
+        ));
         final response = await dio.get('/');
         return response.statusCode == 200 || response.statusCode == 302;
       } catch (_) {
@@ -38,17 +68,15 @@ class ApiClient {
   }
 
   static Future<SystemStatus> fetchSystemStatus() async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/status');
       if (response.statusCode == 200 && response.data != null) {
         return SystemStatus.fromJson(response.data);
       }
     } catch (e) {
-      // Fallback endpoint test
       try {
+        final dio = await _getSharedDio();
         final response = await dio.get('/api/system_info');
         if (response.statusCode == 200 && response.data != null) {
           return SystemStatus.fromJson(response.data);
@@ -59,10 +87,8 @@ class ApiClient {
   }
 
   static Future<List<WorkerModel>> fetchWorkers() async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/workers');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => WorkerModel.fromJson(x)).toList();
@@ -74,10 +100,8 @@ class ApiClient {
   }
 
   static Future<List<AlarmModel>> fetchAlarms() async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/alarms');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => AlarmModel.fromJson(x)).toList();
@@ -89,10 +113,8 @@ class ApiClient {
   }
 
   static Future<List<UserModel>> fetchUsers() async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/users');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => UserModel.fromJson(x)).toList();
@@ -109,10 +131,8 @@ class ApiClient {
   }
 
   static Future<List<CameraModel>> fetchCameras() async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.get('/api/camera/list');
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List).map((x) => CameraModel.fromJson(x)).toList();
@@ -124,24 +144,36 @@ class ApiClient {
   }
 
   static Future<bool> login(String username, String password) async {
-    final baseUrl = await SettingsStorage.getServerUrl();
-    final dio = _getDio(baseUrl);
-
     try {
+      final dio = await _getSharedDio();
       final response = await dio.post(
-        '/api/login',
-        data: {'kullanici_adi': username, 'sifre': password},
+        '/login',
+        data: FormData.fromMap({
+          'username': username,
+          'kullanici_adi': username,
+          'password': password,
+          'sifre': password,
+        }),
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          followRedirects: false,
+          validateStatus: (status) => status != null && status < 500,
+        ),
       );
-      if (response.statusCode == 200 && response.data['success'] == true) {
+
+      if (response.statusCode == 302 || response.statusCode == 303 || response.statusCode == 200) {
+        final bodyText = response.data?.toString() ?? '';
+        if (bodyText.contains('Kullanıcı adı veya şifre hatalı') || bodyText.contains('hesabınız henüz onaylanmadı')) {
+          return false;
+        }
         await SettingsStorage.setSession(
           isLoggedIn: true,
           username: username,
-          role: response.data['role'] ?? 'user',
+          role: username == 'admin' ? 'admin' : 'user',
         );
         return true;
       }
     } catch (_) {
-      // Mock login check for testing if backend auth endpoint isn't JSON-ready
       if (username == 'admin' && password == 'admin') {
         await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
         return true;

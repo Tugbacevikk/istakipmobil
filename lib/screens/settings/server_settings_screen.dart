@@ -51,6 +51,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     final newUrl = _urlController.text.trim();
     if (newUrl.isEmpty) return;
 
+    await ApiClient.resetClient();
     await context.read<AppProvider>().updateServerUrl(newUrl);
 
     if (mounted) {
