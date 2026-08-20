@@ -183,6 +183,18 @@ class ApiClient {
     return [];
   }
 
+  static Future<Map<String, dynamic>> fetchReportSummary() async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.get('/api/reports/summary');
+      final data = _parseResponseData(response.data);
+      if (response.statusCode == 200 && data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+    } catch (_) {}
+    return {};
+  }
+
   static Future<bool> login(String username, String password) async {
     final dio = await _getSharedDio();
     try {
