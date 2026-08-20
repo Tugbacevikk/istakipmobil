@@ -28,6 +28,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
   int _totalAlarms = 0;
   int _totalWorkers = 0;
 
+  List<Map<String, dynamic>> _detailLogs = [];
+
   @override
   void initState() {
     super.initState();
@@ -64,12 +66,30 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final istasyonParam = _selectedStation == 'Tüm İstasyonlar' ? '' : _selectedStation;
     final workerParam = _selectedWorker == 'Tüm Çalışanlar' ? '' : _selectedWorker;
 
-    final data = await ApiClient.fetchReportSummary(
+    final summaryFuture = ApiClient.fetchReportSummary(
       start: start,
       end: end,
       istasyon: istasyonParam,
       worker: workerParam,
     );
+
+    final detailFuture = ApiClient.fetchReportDetailStats(
+      start: start,
+      end: end,
+      istasyon: istasyonParam,
+      worker: workerParam,
+    );
+
+    final results = await Future.wait([summaryFuture, detailFuture]);
+    final data = results[0] as Map<String, dynamic>;
+    final details = results[1] as List<Map<String, dynamic>>;
+
+    // Filter out video file records from details
+    final cleanDetails = details.where((item) {
+      final st = (item['istasyon_adi'] ?? '').toString().toLowerCase();
+      final w = (item['worker_adi'] ?? '').toString().toLowerCase();
+      return !st.contains('video:') && !st.contains('.mp4') && !w.contains('video:');
+    }).toList();
 
     if (mounted) {
       setState(() {
@@ -83,8 +103,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _totalWorkers = (data['toplam_calisan'] ?? 0) is int
             ? data['toplam_calisan']
             : int.tryParse(data['toplam_calisan'].toString()) ?? 0;
+
+        _detailLogs = cleanDetails;
         _isLoading = false;
       });
+    }
+  }
+
+  String _formatTimeOnly(String? fullDateTime) {
+    if (fullDateTime == null || fullDateTime.isEmpty) return '--:--';
+    try {
+      if (fullDateTime.contains(' ')) {
+        final parts = fullDateTime.split(' ');
+        if (parts.length > 1) {
+          final timePart = parts[1];
+          final subParts = timePart.split(':');
+          if (subParts.length >= 2) {
+            return '${subParts[0]}:${subParts[1]}';
+          }
+        }
+      }
+      return fullDateTime;
+    } catch (_) {
+      return fullDateTime;
     }
   }
 
@@ -92,7 +133,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    // Build station dropdown options from cameras
     final stationOptions = <String>['Tüm İstasyonlar'];
     for (final cam in provider.cameras) {
       final sName = cam.name.trim();
@@ -104,7 +144,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     if (!stationOptions.contains('Istasyon-2')) stationOptions.add('Istasyon-2');
     if (!stationOptions.contains('Istasyon-3')) stationOptions.add('Istasyon-3');
 
-    // Build worker dropdown options
     final workerOptions = <String>['Tüm Çalışanlar'];
     for (final w in provider.workers) {
       final wName = w.name.trim();
@@ -132,13 +171,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ),
       body: Column(
         children: [
-          // Filter Section (Tarih, İstasyon, Kişi)
+          // Filter Section
           Container(
             color: AppColors.cardDark,
             padding: const EdgeInsets.only(top: 8, bottom: 12, left: 12, right: 12),
             child: Column(
               children: [
-                // Tarih Filtresi Chips
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -156,11 +194,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-
-                // Dropdown Filters Row (İstasyon & Kişi Bazlı)
                 Row(
                   children: [
-                    // İstasyon Dropdown
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -193,8 +228,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-
-                    // Kişi / Çalışan Dropdown
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -371,10 +404,147 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           _buildReportStatTile('Kaynak İşlemi Süresi', '${_weldingMin.toStringAsFixed(1)} dk (%$weldingPct)', AppColors.welding),
                           const SizedBox(height: 10),
                           _buildReportStatTile('Toplam İhlal / Alarm', '$_totalAlarms Kayıt', Colors.redAccent),
+
+                          const SizedBox(height: 24),
+                          const Divider(color: AppColors.cardBorder),
+                          const SizedBox(height: 12),
+
+                          // NEW SECTION: Detailed Station & Time Logs (Hangi İstasyondan Saat Kaçla Kaç Arası Veri Alındı)
+                          Row(
+                            children: const [
+                              Icon(Icons.history_toggle_off_rounded, color: AppColors.cyanAccent, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'İstasyon & Zaman Çizelgesi Raporu',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+
+                          if (_detailLogs.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: AppColors.cardDark,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Seçilen zaman aralığında istasyon kaydı bulunmuyor.',
+                                  style: TextStyle(color: AppColors.textSecondary),
+                                ),
+                              ),
+                            )
+                          else
+                            ..._detailLogs.map((log) => _buildDetailLogCard(log)),
                         ],
                       ),
                     ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailLogCard(Map<String, dynamic> log) {
+    final station = log['istasyon_adi'] ?? 'Atanmamış İstasyon';
+    final worker = log['worker_adi'] ?? 'Atanmamış Çalışan';
+    final startTime = _formatTimeOnly(log['ilk_gorulme']);
+    final endTime = _formatTimeOnly(log['son_gorulme']);
+    final dateStr = log['tarih_fmt'] ?? log['tarih'] ?? '';
+    final workingFmt = log['aktif_sure_fmt'] ?? '${log['aktif_sure_min'] ?? 0} dk';
+    final idleFmt = log['inaktif_sure_fmt'] ?? '${log['inaktif_sure_min'] ?? 0} dk';
+    final verim = log['verimlilik_orani'] ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardDark,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    station,
+                    style: const TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.working.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.working.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  'Verimlilik: %$verim',
+                  style: const TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.person_outline_rounded, color: Colors.orangeAccent, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                worker,
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: AppColors.cardBorder, height: 1),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.access_time_rounded, color: AppColors.textSecondary, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Saat: $startTime - $endTime',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              if (dateStr.isNotEmpty)
+                Text(
+                  dateStr,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '🟢 Çalışma: $workingFmt',
+                style: const TextStyle(color: AppColors.working, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              Text(
+                '🟠 Duruş: $idleFmt',
+                style: const TextStyle(color: AppColors.idle, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ],
       ),
