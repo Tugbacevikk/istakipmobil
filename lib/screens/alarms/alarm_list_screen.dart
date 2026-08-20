@@ -29,6 +29,22 @@ class AlarmListScreen extends StatelessWidget {
             title: const Text('Alarmlar & Saha İhlalleri', style: TextStyle(color: AppColors.textPrimary)),
             actions: [
               IconButton(
+                icon: const Icon(Icons.done_all_rounded, color: AppColors.cyanAccent),
+                onPressed: () async {
+                  final ok = await ApiClient.markAlarmsRead();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(ok ? 'Tüm alarmlar okundu işaretlendi.' : 'İşlem gerçekleştirildi.'),
+                        backgroundColor: ok ? AppColors.working : AppColors.accent,
+                      ),
+                    );
+                    provider.refreshData();
+                  }
+                },
+                tooltip: 'Tümünü Okundu İşaretle',
+              ),
+              IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                 onPressed: provider.refreshData,
               ),

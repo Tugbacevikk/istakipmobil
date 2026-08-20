@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/network/api_client.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,8 +14,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _firmaController = TextEditingController();
   bool _isLoading = false;
   String? _message;
+  bool _isSuccess = false;
 
   @override
   void dispose() {
@@ -22,12 +25,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _firmaController.dispose();
     super.dispose();
   }
 
-  void _handleRegister() {
-    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _message = 'Lütfen gerekli tüm alanları doldurun.');
+  Future<void> _handleRegister() async {
+    final adSoyad = _fullNameController.text.trim();
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final firma = _firmaController.text.trim();
+
+    if (username.isEmpty || password.isEmpty || adSoyad.isEmpty || email.isEmpty) {
+      setState(() {
+        _message = 'Lütfen tüm alanları doldurun.';
+        _isSuccess = false;
+      });
       return;
     }
 
@@ -36,14 +49,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _message = null;
     });
 
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _message = 'Kayıt başarılı! Giriş yapabilirsiniz.';
-        });
-      }
-    });
+    final ok = await ApiClient.registerUser(
+      username: username,
+      password: password,
+      adSoyad: adSoyad,
+      email: email,
+      firmaAdi: firma.isNotEmpty ? firma : 'Fabrika',
+    );
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _isSuccess = ok;
+        _message = ok
+            ? '✅ Başvurunuz alındı! Admin onayından sonra hesabınızla giriş yapabilirsiniz.'
+            : '❌ Kayıt alınamadı. Bu kullanıcı adı veya e-posta zaten kayıtlı olabilir.';
+      });
+    }
   }
 
   @override
@@ -52,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppColors.bgDark,
       appBar: AppBar(
         backgroundColor: AppColors.brandRedDark,
-        title: const Text('Kayıt Ol', style: TextStyle(color: Colors.white)),
+        title: const Text('Patron Hesabı Kayıt Başvurusu', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
@@ -61,12 +83,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Yeni Kullanıcı Hesabı',
+              'Yeni Patron / Yönetici Hesabı',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
             const Text(
-              'İş Takip Sistemine erişim için kayıt formunu doldurun.',
+              'Saha erişimi için başvurunuz Admin onayına düşecektir.',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 24),
@@ -77,13 +99,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 16),
             _buildTextField(_emailController, 'E-Posta Adresi', Icons.email_outlined),
             const SizedBox(height: 16),
+            _buildTextField(_firmaController, 'Firma / Departman Adı', Icons.business_rounded),
+            const SizedBox(height: 16),
             _buildTextField(_passwordController, 'Şifre', Icons.lock_outline_rounded, isObscure: true),
             const SizedBox(height: 20),
 
             if (_message != null) ...[
-              Text(
-                _message!,
-                style: const TextStyle(color: AppColors.working, fontWeight: FontWeight.bold),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _isSuccess ? AppColors.working.withValues(alpha: 0.15) : AppColors.alarm.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _isSuccess ? AppColors.working : AppColors.alarm),
+                ),
+                child: Text(
+                  _message!,
+                  style: TextStyle(
+                    color: _isSuccess ? AppColors.working : AppColors.alarm,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
             ],
@@ -100,7 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                     : const Text(
-                        'KAYIT OL',
+                        'BAŞVURUYU GÖNDER',
                         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
@@ -122,18 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         prefixIcon: Icon(icon, color: AppColors.brandRedLight),
         filled: true,
         fillColor: AppColors.cardDark,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.cardBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.cardBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.brandRedLight, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.cardBorder)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.cardBorder)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.brandRedLight, width: 2)),
       ),
     );
   }

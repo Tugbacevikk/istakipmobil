@@ -123,6 +123,43 @@ class ApiClient {
     return [];
   }
 
+  static Future<bool> addWorker({
+    required String ad,
+    required String soyad,
+    required String sicilNo,
+    required String departman,
+    required String istasyonAdi,
+  }) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post(
+        '/api/workers',
+        data: {
+          'ad': ad,
+          'soyad': soyad,
+          'sicil_no': sicilNo,
+          'departman': departman,
+          'istasyon_adi': istasyonAdi,
+        },
+      );
+      final data = _parseResponseData(response.data);
+      if (response.statusCode == 200 && data is Map && data['success'] == true) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  static Future<bool> deleteWorker(int workerId) async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/workers/$workerId/delete');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<List<AlarmModel>> fetchAlarms() async {
     try {
       final dio = await _getSharedDio();
@@ -295,6 +332,41 @@ class ApiClient {
       }
     } catch (_) {}
     return [];
+  }
+
+  static Future<bool> markAlarmsRead() async {
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/alarms/mark_read');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> registerUser({
+    required String username,
+    required String password,
+    required String adSoyad,
+    required String email,
+    required String firmaAdi,
+  }) async {
+    try {
+      final dio = await _getSharedDio();
+      final formString = 'username=${Uri.encodeQueryComponent(username)}&password=${Uri.encodeQueryComponent(password)}&password_confirm=${Uri.encodeQueryComponent(password)}&ad_soyad=${Uri.encodeQueryComponent(adSoyad)}&email=${Uri.encodeQueryComponent(email)}&firma_adi=${Uri.encodeQueryComponent(firmaAdi)}';
+
+      final response = await dio.post(
+        '/register',
+        data: formString,
+        options: Options(
+          contentType: 'application/x-www-form-urlencoded',
+        ),
+      );
+      final text = response.data?.toString() ?? '';
+      return response.statusCode == 200 || text.contains('bekleniyor') || text.contains('Giriş');
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<bool> login(String username, String password) async {
