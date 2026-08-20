@@ -71,12 +71,12 @@ class _CameraRoiSettingsScreenState extends State<CameraRoiSettingsScreen> {
                         border: Border.all(color: Colors.redAccent, width: 2),
                         color: Colors.redAccent.withValues(alpha: 0.2),
                       ),
-                      child: const Align(
+                      child: Align(
                         alignment: Alignment.topLeft,
                         child: Container(
                           color: Colors.redAccent,
-                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          child: Text(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: const Text(
                             'ROI BÖLGESİ (Tehlikeli Alan)',
                             style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
