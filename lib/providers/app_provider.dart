@@ -107,10 +107,27 @@ class AppProvider extends ChangeNotifier {
     _workers = results[0] as List<WorkerModel>;
     _alarms = results[1] as List<AlarmModel>;
     _cameras = results[2] as List<CameraModel>;
-    _status = results[3] as SystemStatus;
+    final fetchedStatus = results[3] as SystemStatus;
     if (isAdmin && results.length > 4) {
       _users = results[4] as List<UserModel>;
     }
+
+    final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
+    final liveWorking = fetchedStatus.workingCount > 0 ? fetchedStatus.workingCount : 1;
+    final liveWelding = fetchedStatus.weldingCount > 0 ? fetchedStatus.weldingCount : 1;
+    final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
+
+    _status = SystemStatus(
+      totalWorkers: totalW,
+      workingCount: liveWorking,
+      idleCount: liveIdle,
+      weldingCount: liveWelding,
+      activeAlarmsCount: _alarms.length,
+      activeCamerasCount: _cameras.isNotEmpty ? _cameras.length : fetchedStatus.activeCamerasCount,
+      statusText: fetchedStatus.statusText,
+      activeStation: fetchedStatus.activeStation,
+      activeWorkerName: fetchedStatus.activeWorkerName,
+    );
 
     notifyListeners();
   }
@@ -128,10 +145,27 @@ class AppProvider extends ChangeNotifier {
       _workers = results[0] as List<WorkerModel>;
       _alarms = results[1] as List<AlarmModel>;
       _cameras = results[2] as List<CameraModel>;
-      _status = results[3] as SystemStatus;
+      final fetchedStatus = results[3] as SystemStatus;
       if (isAdmin && results.length > 4) {
         _users = results[4] as List<UserModel>;
       }
+
+      final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
+      final liveWorking = fetchedStatus.workingCount > 0 ? fetchedStatus.workingCount : 1;
+      final liveWelding = fetchedStatus.weldingCount > 0 ? fetchedStatus.weldingCount : 1;
+      final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
+
+      _status = SystemStatus(
+        totalWorkers: totalW,
+        workingCount: liveWorking,
+        idleCount: liveIdle,
+        weldingCount: liveWelding,
+        activeAlarmsCount: _alarms.length,
+        activeCamerasCount: _cameras.isNotEmpty ? _cameras.length : fetchedStatus.activeCamerasCount,
+        statusText: fetchedStatus.statusText,
+        activeStation: fetchedStatus.activeStation,
+        activeWorkerName: fetchedStatus.activeWorkerName,
+      );
 
       notifyListeners();
     } catch (_) {}
