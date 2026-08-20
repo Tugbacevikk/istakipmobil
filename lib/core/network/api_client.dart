@@ -145,16 +145,14 @@ class ApiClient {
   static Future<bool> login(String username, String password) async {
     final dio = await _getSharedDio();
     try {
+      // Build explicit urlencoded string for cross-platform form submission
+      final formString = 'username=${Uri.encodeQueryComponent(username)}&password=${Uri.encodeQueryComponent(password)}&kullanici_adi=${Uri.encodeQueryComponent(username)}&sifre=${Uri.encodeQueryComponent(password)}';
+
       final loginRes = await dio.post(
         '/login',
-        data: {
-          'username': username,
-          'kullanici_adi': username,
-          'password': password,
-          'sifre': password,
-        },
+        data: formString,
         options: Options(
-          contentType: Headers.formUrlEncodedContentType,
+          contentType: 'application/x-www-form-urlencoded',
           followRedirects: true,
           extra: {'withCredentials': true},
           validateStatus: (status) => status != null && status < 500,
@@ -165,12 +163,20 @@ class ApiClient {
         '/api/camera/status',
         options: Options(extra: {'withCredentials': true}),
       );
-      if (testResponse.statusCode == 200 || loginRes.statusCode == 302 || loginRes.statusCode == 200) {
-        final bodyText = loginRes.data?.toString() ?? '';
-        if (bodyText.contains('Kullanıcı adı veya şifre hatalı') || bodyText.contains('hesabınız henüz onaylanmadı')) {
-          return false;
-        }
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: '');
+
+      final bodyText = loginRes.data?.toString() ?? '';
+      final isFailedMessage = bodyText.contains('Kullanıcı adı veya şifre hatalı') ||
+          bodyText.contains('hesabınız henüz onaylanmadı') ||
+          bodyText.contains('Başvurunuz reddedildi');
+
+      if (testResponse.statusCode == 200 && !isFailedMessage) {
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
+        return true;
+      }
+
+      // Check if redirect to dashboard occurred
+      if ((loginRes.statusCode == 200 || loginRes.statusCode == 302) && !isFailedMessage) {
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: 'admin');
         return true;
       }
       return false;
