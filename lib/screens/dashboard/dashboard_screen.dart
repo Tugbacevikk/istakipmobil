@@ -101,6 +101,44 @@ class DashboardScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Live Instant Alarm Banner Notification
+                  if (provider.latestAlarmMessage != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.alarm.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.alarm, width: 1.5),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.notifications_active_rounded, color: AppColors.alarm, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'ANLIK SAHA ALARMI TESPİT EDİLDİ!',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  provider.latestAlarmMessage!,
+                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                            onPressed: provider.clearLatestAlarm,
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // Connection Banner
                   _buildConnectionBanner(context, isConnected, provider.serverUrl),
                   const SizedBox(height: 16),

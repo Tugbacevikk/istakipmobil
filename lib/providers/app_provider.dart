@@ -21,6 +21,7 @@ class AppProvider extends ChangeNotifier {
 
   String _userRole = 'user';
   String _username = '';
+  String? _latestAlarmMessage;
 
   SystemStatus get status => _status;
   List<WorkerModel> get workers => _workers;
@@ -34,8 +35,14 @@ class AppProvider extends ChangeNotifier {
 
   String get userRole => _userRole;
   String get username => _username;
+  String? get latestAlarmMessage => _latestAlarmMessage;
   bool get isAdmin => _userRole == 'admin' || _username == 'admin';
   bool get isPatron => _userRole == 'patron' || _userRole == 'user';
+
+  void clearLatestAlarm() {
+    _latestAlarmMessage = null;
+    notifyListeners();
+  }
 
   AppProvider() {
     init();
@@ -96,6 +103,17 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _initSocket() {
-    SocketService.connect();
+    SocketService.connect(
+      onNewAlarm: (data) {
+        String msg = '🚨 YENİ ALARM TESPİT EDİLDİ!';
+        if (data is Map && data.containsKey('aciklama')) {
+          msg = '🚨 ${data['aciklama']}';
+        } else if (data is Map && data.containsKey('message')) {
+          msg = '🚨 ${data['message']}';
+        }
+        _latestAlarmMessage = msg;
+        refreshData();
+      },
+    );
   }
 }

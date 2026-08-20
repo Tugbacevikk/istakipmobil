@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -5,6 +6,9 @@ import '../../core/network/api_client.dart';
 import '../../models/camera.dart';
 import '../../providers/app_provider.dart';
 import '../settings/camera_roi_settings_screen.dart';
+
+import 'dart:ui_web' as ui_web;
+import 'dart:html' as html;
 
 class CameraStreamScreen extends StatefulWidget {
   const CameraStreamScreen({super.key});
@@ -275,38 +279,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
               ],
             ),
           ),
-          Container(
-            height: 220,
-            width: double.infinity,
-            color: Colors.black,
-            child: Image.network(
-              streamUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 42),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Ana Sunucu Görüntü Yayını Hazır',
-                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Yayın Adresi: $streamUrl',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+          LiveStreamPlayer(streamUrl: streamUrl, cameraName: 'Ana Sunucu Kamera Yayını'),
         ],
       ),
     );
@@ -388,39 +361,91 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
               ],
             ),
           ),
-          Container(
-            height: 220,
-            width: double.infinity,
-            color: Colors.black,
-            child: Image.network(
-              streamUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.videocam_off_rounded, color: AppColors.textSecondary, size: 36),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${camera.name} Yayını (${camera.ipAddress ?? "Yerel Ağ"})',
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        streamUrl,
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+          LiveStreamPlayer(streamUrl: streamUrl, cameraName: camera.name),
         ],
+      ),
+    );
+  }
+}
+
+class LiveStreamPlayer extends StatefulWidget {
+  final String streamUrl;
+  final String cameraName;
+
+  const LiveStreamPlayer({
+    super.key,
+    required this.streamUrl,
+    required this.cameraName,
+  });
+
+  @override
+  State<LiveStreamPlayer> createState() => _LiveStreamPlayerState();
+}
+
+class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
+  late String _viewType;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewType = 'mjpeg_${widget.streamUrl.hashCode}_${DateTime.now().microsecondsSinceEpoch}';
+    if (kIsWeb) {
+      // ignore: undefined_prefixed_name
+      ui_web.platformViewRegistry.registerViewFactory(
+        _viewType,
+        (int id) {
+          final img = html.ImageElement()
+            ..src = widget.streamUrl
+            ..style.width = '100%'
+            ..style.height = '100%'
+            ..style.objectFit = 'cover'
+            ..style.border = 'none';
+          return img;
+        },
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return SizedBox(
+        height: 220,
+        width: double.infinity,
+        child: HtmlElementView(viewType: _viewType),
+      );
+    }
+
+    return Container(
+      height: 220,
+      width: double.infinity,
+      color: Colors.black,
+      child: Image.network(
+        widget.streamUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: const Color(0xFF0F172A),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 42),
+                const SizedBox(height: 10),
+                Text(
+                  '${widget.cameraName} Görüntü Yayını',
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.streamUrl,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
