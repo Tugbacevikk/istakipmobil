@@ -56,8 +56,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     final newUrl = _urlController.text.trim();
     if (newUrl.isEmpty) return;
 
+    final provider = context.read<AppProvider>();
     await ApiClient.resetClient();
-    await context.read<AppProvider>().updateServerUrl(newUrl);
+    await provider.updateServerUrl(newUrl);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
