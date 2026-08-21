@@ -151,165 +151,301 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void _showEmailReportDialog(BuildContext context) {
     final customEmailController = TextEditingController();
     bool isSending = false;
-    List<Map<String, String>> recipients = [];
-    Set<String> selectedEmails = {};
+    bool isInitialLoading = true;
+
+    List<UserModel> registeredUsers = [];
+    Map<int, bool> userSelections = {};
+    Map<int, TextEditingController> emailControllers = {};
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
-          return FutureBuilder<List<Map<String, String>>>(
-            future: recipients.isEmpty ? ApiClient.fetchMailRecipients() : Future.value(recipients),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && recipients.isEmpty) {
-                return const AlertDialog(
-                  backgroundColor: AppColors.cardDark,
-                  content: SizedBox(
-                    height: 100,
-                    child: Center(child: CircularProgressIndicator(color: AppColors.cyanAccent)),
-                  ),
-                );
-              }
+          if (isInitialLoading) {
+            Future.wait([
+              ApiClient.fetchUsers(),
+              ApiClient.fetchMailRecipients(),
+            ]).then((results) {
+              final users = results[0] as List<UserModel>;
+              final mailRecs = results[1] as List<Map<String, String>>;
 
-              if (snapshot.hasData && recipients.isEmpty) {
-                recipients = snapshot.data!;
-                for (var rec in recipients) {
-                  final e = rec['email'];
-                  if (e != null && e.isNotEmpty) {
-                    selectedEmails.add(e);
-                  }
+              final Map<String, String> emailByUsername = {};
+              for (var r in mailRecs) {
+                final uname = r['kullanici_adi'] ?? r['username'];
+                final em = r['email'];
+                if (uname != null && em != null) {
+                  emailByUsername[uname.toString().toLowerCase()] = em.toString();
                 }
               }
 
-              return AlertDialog(
-                backgroundColor: AppColors.cardDark,
-                title: Row(
-                  children: const [
-                    Icon(Icons.mark_email_read_rounded, color: AppColors.cyanAccent),
-                    SizedBox(width: 8),
-                    Text('PDF Raporu E-posta ile Gönder', style: TextStyle(color: Colors.white, fontSize: 16)),
-                  ],
-                ),
-                content: SingleChildScrollView(
+              registeredUsers = users
+                  .where((u) =>
+                      u.durum == 'onaylandi' ||
+                      u.durum == 'approved' ||
+                      u.rol.toLowerCase() == 'patron' ||
+                      u.rol.toLowerCase() == 'admin')
+                  .toList();
+
+              if (registeredUsers.isEmpty && users.isNotEmpty) {
+                registeredUsers = users;
+              }
+
+              for (var u in registeredUsers) {
+                userSelections[u.id] = true;
+                final existingEmail = (u.email != null && u.email!.isNotEmpty)
+                    ? u.email!
+                    : (emailByUsername[u.kullaniciAdi.toLowerCase()] ?? '');
+                emailControllers[u.id] = TextEditingController(text: existingEmail);
+              }
+
+              setDialogState(() {
+                isInitialLoading = false;
+              });
+            });
+
+            return const AlertDialog(
+              backgroundColor: AppColors.cardDark,
+              content: SizedBox(
+                height: 120,
+                child: Center(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Seçilen filtrelere göre hazırlanan PDF raporunu kayıtlı alıcılara veya yeni bir e-posta adresine gönderin:',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                      ),
-                      const SizedBox(height: 12),
-                      if (recipients.isNotEmpty) ...[
-                        const Text(
-                          'Kayıtlı Alıcılar:',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        const SizedBox(height: 6),
-                        ...recipients.map((rec) {
-                          final email = rec['email'] ?? rec['kullanici_adi'] ?? '';
-                          final name = rec['name'] ?? rec['ad_soyad'] ?? email;
-                          final isChecked = selectedEmails.contains(email);
-                          return CheckboxListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            activeColor: AppColors.primary,
-                            title: Text(name, style: const TextStyle(color: Colors.white, fontSize: 13)),
-                            subtitle: Text(email, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                            value: isChecked,
-                            onChanged: (val) {
-                              setDialogState(() {
-                                if (val == true) {
-                                  selectedEmails.add(email);
-                                } else {
-                                  selectedEmails.remove(email);
-                                }
-                              });
-                            },
-                          );
-                        }),
-                        const SizedBox(height: 10),
-                      ],
-                      const Text(
-                        'Yeni / Manuel E-posta Adresi:',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: customEmailController,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
-                        decoration: const InputDecoration(
-                          hintText: 'ornek@sirket.com',
-                          hintStyle: TextStyle(color: Colors.white38),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      CircularProgressIndicator(color: AppColors.cyanAccent),
+                      SizedBox(height: 12),
+                      Text('Kayıtlı patron hesapları yükleniyor...',
+                          style: TextStyle(color: Colors.white, fontSize: 13)),
                     ],
                   ),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: isSending ? null : () => Navigator.pop(dialogCtx),
-                    child: const Text('İptal'),
-                  ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    onPressed: isSending
-                        ? null
-                        : () async {
-                            final custom = customEmailController.text.trim();
-                            if (custom.isNotEmpty) {
-                              selectedEmails.add(custom);
-                            }
+              ),
+            );
+          }
 
-                            if (selectedEmails.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Lütfen en az bir geçerli e-posta adresi seçin veya yazın.'),
-                                  backgroundColor: AppColors.alarm,
-                                ),
-                              );
-                              return;
-                            }
+          final allSelected = registeredUsers.isNotEmpty &&
+              registeredUsers.every((u) => userSelections[u.id] == true);
 
-                            setDialogState(() => isSending = true);
-                            final (start, end) = _getDateRange(_selectedPeriod);
-                            final istasyonParam = _selectedStation == 'Tüm İstasyonlar' ? '' : _selectedStation;
-                            final workerParam = _selectedWorker == 'Tüm Çalışanlar' ? '' : _selectedWorker;
+          return AlertDialog(
+            backgroundColor: AppColors.cardDark,
+            title: Row(
+              children: const [
+                Icon(Icons.mark_email_read_rounded, color: AppColors.cyanAccent),
+                SizedBox(width: 8),
+                Text('PDF Raporu E-posta ile Gönder', style: TextStyle(color: Colors.white, fontSize: 16)),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Seçilen filtrelere göre hazırlanan PDF raporunu kayıtlı patron hesaplarına veya manuel adrese gönderin:',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                    const SizedBox(height: 14),
 
-                            final success = await ApiClient.sendReportEmail(
-                              emails: selectedEmails.toList(),
-                              start: start,
-                              end: end,
-                              istasyon: istasyonParam,
-                              worker: workerParam,
+                    if (registeredUsers.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Kayıtlı Patron Hesapları:',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              setDialogState(() {
+                                final target = !allSelected;
+                                for (var u in registeredUsers) {
+                                  userSelections[u.id] = target;
+                                }
+                              });
+                            },
+                            child: Text(
+                              allSelected ? 'Tümünü Kaldır' : 'Tümünü Seç',
+                              style: const TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.cardBorder),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: registeredUsers.length,
+                          separatorBuilder: (_, __) => const Divider(color: AppColors.cardBorder, height: 1),
+                          itemBuilder: (ctx, idx) {
+                            final u = registeredUsers[idx];
+                            final isChecked = userSelections[u.id] ?? false;
+                            final ctrl = emailControllers[u.id]!;
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Checkbox(
+                                        activeColor: AppColors.primary,
+                                        value: isChecked,
+                                        onChanged: (val) {
+                                          setDialogState(() {
+                                            userSelections[u.id] = val == true;
+                                          });
+                                        },
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          '${u.adSoyad} (@${u.kullaniciAdi})',
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: u.rol == 'admin'
+                                              ? AppColors.brandRedLight.withValues(alpha: 0.2)
+                                              : AppColors.cyanAccent.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          u.rol.toUpperCase(),
+                                          style: TextStyle(
+                                            color: u.rol == 'admin'
+                                                ? AppColors.brandRedLight
+                                                : AppColors.cyanAccent,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (isChecked)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 40, right: 8, bottom: 8),
+                                      child: TextField(
+                                        controller: ctrl,
+                                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        decoration: const InputDecoration(
+                                          labelText: 'E-posta Adresi',
+                                          labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                                          hintText: 'patron@sirket.com',
+                                          hintStyle: TextStyle(color: Colors.white38, fontSize: 11),
+                                          isDense: true,
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             );
-
-                            setDialogState(() => isSending = false);
-                            if (mounted) {
-                              Navigator.pop(dialogCtx);
-                              final msg = success
-                                  ? 'PDF Raporu ${selectedEmails.length} e-posta adresine gönderildi!'
-                                  : (ApiClient.lastErrorMessage.isNotEmpty
-                                      ? ApiClient.lastErrorMessage
-                                      : 'E-posta gönderilemedi. Lütfen SMTP ayarlarını kontrol edin.');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: success ? AppColors.working : AppColors.alarm,
-                                ),
-                              );
-                            }
                           },
-                    icon: isSending
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.send_rounded, color: Colors.white, size: 16),
-                    label: Text(isSending ? 'Gönderiliyor...' : 'E-posta Gönder', style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
-              );
-            },
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    const Text(
+                      'Farklı / Ek E-posta Adresi:',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: customEmailController,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: const InputDecoration(
+                        hintText: 'ornek@sirket.com',
+                        hintStyle: TextStyle(color: Colors.white38),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSending ? null : () => Navigator.pop(dialogCtx),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: isSending
+                    ? null
+                    : () async {
+                        final Set<String> targetEmails = {};
+
+                        for (var u in registeredUsers) {
+                          if (userSelections[u.id] == true) {
+                            final em = emailControllers[u.id]?.text.trim() ?? '';
+                            if (em.isNotEmpty) {
+                              targetEmails.add(em);
+                            }
+                          }
+                        }
+
+                        final custom = customEmailController.text.trim();
+                        if (custom.isNotEmpty) {
+                          targetEmails.add(custom);
+                        }
+
+                        if (targetEmails.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Lütfen seçilen patron hesaplarının e-posta adresini doldurun veya ek bir adres yazın.'),
+                              backgroundColor: AppColors.alarm,
+                            ),
+                          );
+                          return;
+                        }
+
+                        setDialogState(() => isSending = true);
+                        final (start, end) = _getDateRange(_selectedPeriod);
+                        final istasyonParam = _selectedStation == 'Tüm İstasyonlar' ? '' : _selectedStation;
+                        final workerParam = _selectedWorker == 'Tüm Çalışanlar' ? '' : _selectedWorker;
+
+                        final success = await ApiClient.sendReportEmail(
+                          emails: targetEmails.toList(),
+                          start: start,
+                          end: end,
+                          istasyon: istasyonParam,
+                          worker: workerParam,
+                        );
+
+                        setDialogState(() => isSending = false);
+                        if (mounted) {
+                          Navigator.pop(dialogCtx);
+                          final msg = success
+                              ? 'PDF Raporu ${targetEmails.length} e-posta adresine başarıyla gönderildi!'
+                              : (ApiClient.lastErrorMessage.isNotEmpty
+                                  ? ApiClient.lastErrorMessage
+                                  : 'E-posta gönderilemedi. Lütfen sunucu SMTP ayarlarını kontrol edin.');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(msg),
+                              backgroundColor: success ? AppColors.working : AppColors.alarm,
+                            ),
+                          );
+                        }
+                      },
+                icon: isSending
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.send_rounded, color: Colors.white, size: 16),
+                label: Text(isSending ? 'Gönderiliyor...' : 'E-posta Gönder', style: const TextStyle(color: Colors.white)),
+              ),
+            ],
           );
         },
       ),
