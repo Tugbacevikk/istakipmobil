@@ -22,6 +22,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     super.initState();
     final currentUrl = context.read<AppProvider>().serverUrl;
     _urlController = TextEditingController(text: currentUrl);
+    _urlController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -130,6 +133,33 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 ),
               ),
             ),
+            if (_urlController.text.trim().toLowerCase().startsWith('http://')) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.shade700, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: Colors.amber.shade700, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Üretim ortamında HTTPS kullanılması önerilir (HTTP şifrelenmemiş yerel test bağlantısıdır).',
+                        style: TextStyle(
+                          color: isDark ? Colors.amber.shade200 : Colors.amber.shade900,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Row(
               children: [

@@ -27,7 +27,11 @@ class SettingsStorage {
       cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
     }
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-      cleanUrl = 'http://$cleanUrl';
+      if (kDebugMode) {
+        cleanUrl = 'http://$cleanUrl';
+      } else {
+        cleanUrl = 'https://$cleanUrl';
+      }
     }
     await prefs.setString(_keyServerUrl, cleanUrl);
   }
