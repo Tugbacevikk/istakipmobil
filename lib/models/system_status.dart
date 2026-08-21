@@ -42,7 +42,7 @@ class SystemStatus {
       weldingCount: welding,
       activeAlarmsCount: json['active_alarms'] ?? json['alarm_count'] ?? 0,
       activeCamerasCount: activeCams,
-      statusText: json['status_text'] ?? (activeCams > 0 ? '$activeCams İstasyon Aktif' : 'Kamera Kapalı'),
+      statusText: json['status_text'] ?? (activeCams > 0 ? '$activeCams İstasyon Aktif (Istasyon-1)' : 'Kamera Kapalı'),
       activeStation: json['istasyon'] ?? json['station'],
       activeWorkerName: json['worker_name'],
     );

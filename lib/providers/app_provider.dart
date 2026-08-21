@@ -143,7 +143,7 @@ class AppProvider extends ChangeNotifier {
 
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
 
-    int liveWorking = _workers.where((w) => w.isAktif && (w.durumText.contains('Çalış') || w.durumText.contains('calis') || w.durumText.toLowerCase().contains('kaynak'))).length;
+    int liveWorking = _workers.where((w) => w.isAktif && (w.status.contains('Çalış') || w.status.contains('calis') || w.status.toLowerCase().contains('kaynak'))).length;
 
     if (liveWorking == 0 && activeCamsCount > 0) {
       liveWorking = activeCamsCount;
@@ -151,12 +151,9 @@ class AppProvider extends ChangeNotifier {
       liveWorking = fetchedStatus.workingCount;
     }
 
-    int liveWelding = _workers.where((w) => w.isAktif && w.durumText.toLowerCase().contains('kaynak')).length;
-    if (liveWelding == 0) {
-      liveWelding = activeCams.where((c) => c.status.toLowerCase().contains('kaynak')).length;
-      if (liveWelding == 0 && fetchedStatus.weldingCount > 0) {
-        liveWelding = fetchedStatus.weldingCount;
-      }
+    int liveWelding = _workers.where((w) => w.isAktif && w.status.toLowerCase().contains('kaynak')).length;
+    if (liveWelding == 0 && fetchedStatus.weldingCount > 0) {
+      liveWelding = fetchedStatus.weldingCount;
     }
 
     final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
