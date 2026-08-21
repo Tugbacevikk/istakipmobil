@@ -201,7 +201,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _testSuccess ? AppColors.working.withOpacity(0.15) : AppColors.alarm.withOpacity(0.15),
+                  color: _testSuccess ? AppColors.working.withValues(alpha: 0.15) : AppColors.alarm.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _testSuccess ? AppColors.working : AppColors.alarm,
