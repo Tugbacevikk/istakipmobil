@@ -133,7 +133,7 @@ class ApiClient {
         validateStatus: (status) => status != null && status < 500,
       ));
       final response = await dio.get('/api/camera/status');
-      if (response.statusCode != null && response.statusCode! < 500) {
+      if (response.statusCode == 200) {
         return true;
       }
     } catch (e) {
@@ -147,7 +147,7 @@ class ApiClient {
           validateStatus: (status) => status != null && status < 500,
         ));
         final response = await dio.get('/');
-        if (response.statusCode != null && response.statusCode! < 500) {
+        if (response.statusCode == 200) {
           _clearError();
           return true;
         }
@@ -156,6 +156,8 @@ class ApiClient {
         return false;
       }
     }
+    lastErrorType = ApiErrorType.connection;
+    lastErrorMessage = 'Sunucuya ulaşılamadı. Lütfen sunucu IP adresini kontrol edin.';
     return false;
   }
 
@@ -202,6 +204,8 @@ class ApiClient {
           }
         }
       }
+      lastErrorType = ApiErrorType.connection;
+      lastErrorMessage = 'Sunucuya ulaşılamadı (${response.statusCode}).';
     } catch (e) {
       _setError(e);
     }
@@ -287,6 +291,9 @@ class ApiClient {
             rawList = list.map((x) => AlarmModel.fromJson(Map<String, dynamic>.from(x))).toList();
           }
         }
+      } else {
+        lastErrorType = ApiErrorType.connection;
+        lastErrorMessage = 'Sunucuya ulaşılamadı (${response.statusCode}).';
       }
 
       return rawList.where((a) {

@@ -282,8 +282,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
 
                   // Register Prompt
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         'Hesabınız yok mu? ',
@@ -299,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           'Kayıt Olun',
                           style: TextStyle(
-                            color: AppColors.brandRedLight,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),

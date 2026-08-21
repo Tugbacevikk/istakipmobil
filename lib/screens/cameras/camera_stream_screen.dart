@@ -7,8 +7,7 @@ import '../../models/camera.dart';
 import '../../providers/app_provider.dart';
 import '../settings/camera_roi_settings_screen.dart';
 
-import 'dart:ui_web' as ui_web;
-import 'dart:html' as html;
+import 'web_stream_stub.dart' if (dart.library.html) 'web_stream_real.dart';
 
 class CameraStreamScreen extends StatefulWidget {
   const CameraStreamScreen({super.key});
@@ -412,19 +411,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     super.initState();
     _viewType = 'mjpeg_${widget.streamUrl.hashCode}_${DateTime.now().microsecondsSinceEpoch}';
     if (kIsWeb) {
-      // ignore: undefined_prefixed_name
-      ui_web.platformViewRegistry.registerViewFactory(
-        _viewType,
-        (int id) {
-          final img = html.ImageElement()
-            ..src = widget.streamUrl
-            ..style.width = '100%'
-            ..style.height = '100%'
-            ..style.objectFit = 'cover'
-            ..style.border = 'none';
-          return img;
-        },
-      );
+      registerWebStream(_viewType, widget.streamUrl);
     }
   }
 

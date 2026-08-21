@@ -225,7 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 firstChild: const SizedBox.shrink(),
                 secondChild: Container(
                   margin: const EdgeInsets.only(bottom: 16),
-                  child: _buildConnectionBanner(context, isConnected, provider.serverUrl, cardColor, textColor, subTextColor, borderColor),
+                  child: _buildConnectionBanner(context, isConnected, provider.serverUrl, provider.lastApiError, cardColor, textColor, subTextColor, borderColor),
                 ),
               ),
 
@@ -383,6 +383,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     BuildContext context,
     bool isConnected,
     String serverUrl,
+    String? lastApiError,
     Color cardColor,
     Color textColor,
     Color subTextColor,
@@ -419,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   isConnected
                       ? 'Sunucu Bağlantısı Aktif'
-                      : (provider.lastApiError ?? 'Sunucuya Bağlanılamadı'),
+                      : (lastApiError ?? 'Sunucuya Bağlanılamadı'),
                   style: TextStyle(
                     color: isConnected ? AppColors.working : AppColors.alarm,
                     fontWeight: FontWeight.bold,
