@@ -133,10 +133,40 @@ class AppProvider extends ChangeNotifier {
       _users = results[4] as List<UserModel>;
     }
 
+    _recalculateSystemStatus(fetchedStatus);
+    notifyListeners();
+  }
+
+  void _recalculateSystemStatus(SystemStatus fetchedStatus) {
+    final activeCams = _cameras.where((c) => c.isActive).toList();
+    final activeCamsCount = _cameras.isNotEmpty ? activeCams.length : fetchedStatus.activeCamerasCount;
+
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
-    final liveWorking = fetchedStatus.workingCount;
-    final liveWelding = fetchedStatus.weldingCount;
-    final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : totalW;
+
+    int liveWorking = _workers.where((w) => w.isAktif && (w.durumText.contains('Çalış') || w.durumText.contains('calis') || w.durumText.toLowerCase().contains('kaynak'))).length;
+
+    if (liveWorking == 0 && activeCamsCount > 0) {
+      liveWorking = activeCamsCount;
+    } else if (fetchedStatus.workingCount > liveWorking) {
+      liveWorking = fetchedStatus.workingCount;
+    }
+
+    int liveWelding = _workers.where((w) => w.isAktif && w.durumText.toLowerCase().contains('kaynak')).length;
+    if (liveWelding == 0) {
+      liveWelding = activeCams.where((c) => c.status.toLowerCase().contains('kaynak')).length;
+      if (liveWelding == 0 && fetchedStatus.weldingCount > 0) {
+        liveWelding = fetchedStatus.weldingCount;
+      }
+    }
+
+    final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : 0;
+
+    String statusText = '$activeCamsCount İstasyon Aktif';
+    if (activeCams.isNotEmpty) {
+      statusText = '$activeCamsCount İstasyon Aktif (${activeCams.map((c) => c.name).join(', ')})';
+    } else if (fetchedStatus.statusText.isNotEmpty) {
+      statusText = fetchedStatus.statusText;
+    }
 
     _status = SystemStatus(
       totalWorkers: totalW,
@@ -144,13 +174,11 @@ class AppProvider extends ChangeNotifier {
       idleCount: liveIdle,
       weldingCount: liveWelding,
       activeAlarmsCount: _alarms.length,
-      activeCamerasCount: fetchedStatus.activeCamerasCount,
-      statusText: fetchedStatus.statusText,
-      activeStation: fetchedStatus.activeStation,
+      activeCamerasCount: activeCamsCount,
+      statusText: statusText,
+      activeStation: activeCams.isNotEmpty ? activeCams.first.name : fetchedStatus.activeStation,
       activeWorkerName: fetchedStatus.activeWorkerName,
     );
-
-    notifyListeners();
   }
 
   Future<void> refreshDataSilent() async {
@@ -171,23 +199,7 @@ class AppProvider extends ChangeNotifier {
         _users = results[4] as List<UserModel>;
       }
 
-      final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
-      final liveWorking = fetchedStatus.workingCount;
-      final liveWelding = fetchedStatus.weldingCount;
-      final liveIdle = totalW > liveWorking ? (totalW - liveWorking) : totalW;
-
-      _status = SystemStatus(
-        totalWorkers: totalW,
-        workingCount: liveWorking,
-        idleCount: liveIdle,
-        weldingCount: liveWelding,
-        activeAlarmsCount: _alarms.length,
-        activeCamerasCount: fetchedStatus.activeCamerasCount,
-        statusText: fetchedStatus.statusText,
-        activeStation: fetchedStatus.activeStation,
-        activeWorkerName: fetchedStatus.activeWorkerName,
-      );
-
+      _recalculateSystemStatus(fetchedStatus);
       notifyListeners();
     } catch (_) {}
   }

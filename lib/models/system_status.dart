@@ -29,11 +29,11 @@ class SystemStatus {
     bool isWelding = durum.toLowerCase().contains('kaynak');
     bool isWorking = (durum.toLowerCase().contains('çalış') || durum.toLowerCase().contains('calis') || isWelding) && isRunning;
 
-    int activeCams = isRunning ? 1 : 0;
-    int working = isWorking ? activeCams : 0;
-    int welding = (isWelding && isRunning) ? activeCams : 0;
-    int totalInDb = summary['toplam_isci'] ?? summary['total_workers'] ?? 4;
-    int idle = totalInDb > working ? (totalInDb - working) : totalInDb;
+    int activeCams = json['active_cameras_count'] ?? json['active_cameras'] ?? (isRunning ? 1 : 0);
+    int working = json['working_count'] ?? (isWorking ? (activeCams > 0 ? activeCams : 1) : 0);
+    int welding = json['welding_count'] ?? ((isWelding && isRunning) ? 1 : 0);
+    int totalInDb = summary['toplam_isci'] ?? summary['total_workers'] ?? json['total_workers'] ?? 4;
+    int idle = totalInDb > working ? (totalInDb - working) : 0;
 
     return SystemStatus(
       totalWorkers: totalInDb,
@@ -42,8 +42,8 @@ class SystemStatus {
       weldingCount: welding,
       activeAlarmsCount: json['active_alarms'] ?? json['alarm_count'] ?? 0,
       activeCamerasCount: activeCams,
-      statusText: isRunning ? '1 İstasyon Aktif (Istasyon-1)' : 'Kamera Kapalı',
-      activeStation: json['istasyon'] ?? json['station'] ?? 'Istasyon-1',
+      statusText: json['status_text'] ?? (activeCams > 0 ? '$activeCams İstasyon Aktif' : 'Kamera Kapalı'),
+      activeStation: json['istasyon'] ?? json['station'],
       activeWorkerName: json['worker_name'],
     );
   }
