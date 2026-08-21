@@ -336,12 +336,26 @@ class ApiClient {
 
   static Future<bool> approveUser(int userId, {List<String>? selectedStations}) async {
     _clearError();
+
+    List<String> stationsToSubmit = selectedStations != null ? List<String>.from(selectedStations) : [];
+
+    if (stationsToSubmit.isEmpty) {
+      final dynamicCameras = await fetchCameras();
+      stationsToSubmit = dynamicCameras.map((c) => c.name).where((n) => n.isNotEmpty).toList();
+    }
+
+    if (stationsToSubmit.isEmpty) {
+      lastErrorType = ApiErrorType.badRequest;
+      lastErrorMessage = 'En az bir istasyon seçilmelidir.';
+      return false;
+    }
+
     try {
       final dio = await _getSharedDio();
       final response = await dio.post(
         '/api/users/$userId/approve',
         data: {
-          'stations': selectedStations ?? ['Istasyon-1', 'Istasyon-2', 'Istasyon-3', 'Istasyon-4'],
+          'stations': stationsToSubmit,
         },
       );
       if (response.statusCode == 200) {

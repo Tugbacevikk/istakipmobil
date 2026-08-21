@@ -91,8 +91,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     backgroundColor: isEditMode ? AppColors.primary : AppColors.working,
                   ),
                   onPressed: () async {
-                    Navigator.pop(ctx);
                     final approvedList = selectedStations.entries.where((e) => e.value).map((e) => e.key).toList();
+                    if (approvedList.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lütfen patron hesabının erişebileceği en az bir istasyon seçin.'),
+                          backgroundColor: AppColors.alarm,
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.pop(ctx);
                     setState(() => _isProcessing = true);
                     final success = await ApiClient.approveUser(user.id, selectedStations: approvedList);
                     setState(() => _isProcessing = false);
