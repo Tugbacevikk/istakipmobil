@@ -21,6 +21,7 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
   final _soyadController = TextEditingController();
   final _sicilController = TextEditingController();
   final _departmanController = TextEditingController();
+  final _customStationController = TextEditingController();
   String _selectedStation = 'Istasyon-1';
 
   void _showAddWorkerDialog(BuildContext context) {
@@ -28,116 +29,170 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
     _soyadController.clear();
     _sicilController.text = 'EMP-${DateTime.now().millisecond}';
     _departmanController.text = 'Üretim';
+    _customStationController.clear();
+
+    final provider = context.read<AppProvider>();
+    final Set<String> availableStations = {
+      'Istasyon-1',
+      'Istasyon-2',
+      'Istasyon-3',
+      'Istasyon-4',
+      'Istasyon-5',
+      'Istasyon-6',
+      'Istasyon-7',
+      'Istasyon-8',
+      ...provider.cameras.map((c) => c.name).where((n) => n.isNotEmpty),
+      '+ Yeni İstasyon Yaz',
+    };
+
+    _selectedStation = availableStations.first;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardDark,
-        title: Row(
-          children: const [
-            Icon(Icons.person_add_alt_1_rounded, color: AppColors.cyanAccent),
-            SizedBox(width: 8),
-            Text('Yeni İşçi Ekle', style: TextStyle(color: Colors.white, fontSize: 16)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _adController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'İşçi Adı',
-                  labelStyle: TextStyle(color: AppColors.textSecondary),
-                  border: OutlineInputBorder(),
-                ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppColors.cardDark,
+            title: Row(
+              children: const [
+                Icon(Icons.person_add_alt_1_rounded, color: AppColors.cyanAccent),
+                SizedBox(width: 8),
+                Text('Yeni İşçi Ekle', style: TextStyle(color: Colors.white, fontSize: 16)),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _adController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'İşçi Adı',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _soyadController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'İşçi Soyadı',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _sicilController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Sicil No',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _departmanController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Departman / Birim',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    initialValue: availableStations.contains(_selectedStation) ? _selectedStation : availableStations.first,
+                    dropdownColor: AppColors.cardDark,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Atanacağı İstasyon',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: availableStations.map((st) {
+                      return DropdownMenuItem(value: st, child: Text(st));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() {
+                          _selectedStation = val;
+                        });
+                      }
+                    },
+                  ),
+                  if (_selectedStation == '+ Yeni İstasyon Yaz') ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _customStationController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Yeni İstasyon Adı (Örn: Istasyon-5)',
+                        labelStyle: TextStyle(color: AppColors.textSecondary),
+                        hintText: 'Istasyon-5',
+                        hintStyle: TextStyle(color: Colors.white38),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _soyadController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'İşçi Soyadı',
-                  labelStyle: TextStyle(color: AppColors.textSecondary),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _sicilController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Sicil No',
-                  labelStyle: TextStyle(color: AppColors.textSecondary),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _departmanController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Departman / Birim',
-                  labelStyle: TextStyle(color: AppColors.textSecondary),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedStation,
-                dropdownColor: AppColors.cardDark,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Atanacağı İstasyon',
-                  labelStyle: TextStyle(color: AppColors.textSecondary),
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Istasyon-1', 'Istasyon-2', 'Istasyon-3', 'Istasyon-4'].map((st) {
-                  return DropdownMenuItem(value: st, child: Text(st));
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) _selectedStation = val;
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('İptal')),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () async {
+                  final ad = _adController.text.trim();
+                  final soyad = _soyadController.text.trim();
+                  String targetStation = _selectedStation;
+                  if (_selectedStation == '+ Yeni İstasyon Yaz') {
+                    targetStation = _customStationController.text.trim();
+                  }
+
+                  if (targetStation.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Lütfen geçerli bir istasyon adı seçin veya yazın.'),
+                        backgroundColor: AppColors.alarm,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (ad.isNotEmpty && soyad.isNotEmpty) {
+                    Navigator.pop(dialogCtx);
+                    setState(() => _isSubmitting = true);
+                    final success = await ApiClient.addWorker(
+                      ad: ad,
+                      soyad: soyad,
+                      sicilNo: _sicilController.text.trim(),
+                      departman: _departmanController.text.trim(),
+                      istasyonAdi: targetStation,
+                    );
+                    setState(() => _isSubmitting = false);
+                    if (mounted) {
+                      final msg = success
+                          ? '"$ad $soyad" ($targetStation) sisteme eklendi.'
+                          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşçi eklenemedi.');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(msg),
+                          backgroundColor: success ? AppColors.working : AppColors.alarm,
+                        ),
+                      );
+                      context.read<AppProvider>().refreshData();
+                    }
+                  }
                 },
+                child: const Text('Ekle', style: TextStyle(color: Colors.white)),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            onPressed: () async {
-              final ad = _adController.text.trim();
-              final soyad = _soyadController.text.trim();
-              if (ad.isNotEmpty && soyad.isNotEmpty) {
-                Navigator.pop(ctx);
-                setState(() => _isSubmitting = true);
-                final success = await ApiClient.addWorker(
-                  ad: ad,
-                  soyad: soyad,
-                  sicilNo: _sicilController.text.trim(),
-                  departman: _departmanController.text.trim(),
-                  istasyonAdi: _selectedStation,
-                );
-                setState(() => _isSubmitting = false);
-                if (mounted) {
-                  final msg = success
-                      ? '"$ad $soyad" sisteme eklendi.'
-                      : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşçi eklenemedi.');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(msg),
-                      backgroundColor: success ? AppColors.working : AppColors.alarm,
-                    ),
-                  );
-                  context.read<AppProvider>().refreshData();
-                }
-              }
-            },
-            child: const Text('Ekle', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
