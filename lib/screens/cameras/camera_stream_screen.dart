@@ -325,14 +325,14 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 20),
+                      const Icon(Icons.videocam_rounded, color: AppColors.primary, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '${camera.name} (${camera.ipAddress ?? "Yerel IP"})',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ),
                     ],
@@ -342,7 +342,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                   children: [
                     if (isAdmin) ...[
                       IconButton(
-                        icon: const Icon(Icons.tune_rounded, color: AppColors.cyanAccent, size: 20),
+                        icon: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 20),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -439,11 +439,11 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 42),
+                const Icon(Icons.videocam_rounded, color: AppColors.primary, size: 42),
                 const SizedBox(height: 10),
                 Text(
                   '${widget.cameraName} Görüntü Yayını',
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
