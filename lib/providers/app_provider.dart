@@ -98,15 +98,17 @@ class AppProvider extends ChangeNotifier {
     _lastApiErrorType = ApiErrorType.none;
     notifyListeners();
 
-    _isConnected = await ApiClient.testConnection(_serverUrl);
-    if (_isConnected) {
-      await refreshData();
-    } else {
+    await refreshData();
+
+    if (ApiClient.lastErrorType != ApiErrorType.none && _workers.isEmpty && _cameras.isEmpty) {
+      _isConnected = false;
       _status = SystemStatus.initial();
-      _lastApiErrorType = ApiClient.lastErrorType != ApiErrorType.none ? ApiClient.lastErrorType : ApiErrorType.connection;
+      _lastApiErrorType = ApiClient.lastErrorType;
       _lastApiError = ApiClient.lastErrorMessage.isNotEmpty
           ? ApiClient.lastErrorMessage
           : 'Sunucuya ulaşılamadı. Lütfen sunucu IP adresini ve Wi-Fi bağlantınızı kontrol edin.';
+    } else {
+      _isConnected = true;
     }
 
     _isLoading = false;

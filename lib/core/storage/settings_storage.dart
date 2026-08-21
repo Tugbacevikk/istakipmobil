@@ -6,8 +6,14 @@ class SettingsStorage {
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyUsername = 'username';
   static const String _keyUserRole = 'user_role';
+  static const String _keyIsDarkMode = 'is_dark_mode';
 
-  // Default server address: http://localhost:5000 for Web/Desktop, 10.0.2.2 for Android emulator
+  static String? _cachedServerUrl;
+  static bool? _cachedIsDarkMode;
+  static String? _cachedUsername;
+  static String? _cachedUserRole;
+  static bool? _cachedIsLoggedIn;
+
   static String get defaultServerUrl {
     if (kIsWeb) {
       return 'http://localhost:5000';
@@ -16,8 +22,10 @@ class SettingsStorage {
   }
 
   static Future<String> getServerUrl() async {
+    if (_cachedServerUrl != null) return _cachedServerUrl!;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyServerUrl) ?? defaultServerUrl;
+    _cachedServerUrl = prefs.getString(_keyServerUrl) ?? defaultServerUrl;
+    return _cachedServerUrl!;
   }
 
   static Future<void> setServerUrl(String url) async {
@@ -33,15 +41,21 @@ class SettingsStorage {
         cleanUrl = 'https://$cleanUrl';
       }
     }
+    _cachedServerUrl = cleanUrl;
     await prefs.setString(_keyServerUrl, cleanUrl);
   }
 
   static Future<bool> isLoggedIn() async {
+    if (_cachedIsLoggedIn != null) return _cachedIsLoggedIn!;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyIsLoggedIn) ?? false;
+    _cachedIsLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
+    return _cachedIsLoggedIn!;
   }
 
   static Future<void> setSession({required bool isLoggedIn, String? username, String? role}) async {
+    _cachedIsLoggedIn = isLoggedIn;
+    if (username != null) _cachedUsername = username;
+    if (role != null) _cachedUserRole = role;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyIsLoggedIn, isLoggedIn);
     if (username != null) await prefs.setString(_keyUsername, username);
@@ -49,30 +63,38 @@ class SettingsStorage {
   }
 
   static Future<String?> getUsername() async {
+    if (_cachedUsername != null) return _cachedUsername;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyUsername);
+    _cachedUsername = prefs.getString(_keyUsername);
+    return _cachedUsername;
   }
 
   static Future<String?> getUserRole() async {
+    if (_cachedUserRole != null) return _cachedUserRole;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyUserRole);
+    _cachedUserRole = prefs.getString(_keyUserRole);
+    return _cachedUserRole;
   }
 
   static Future<void> logout() async {
+    _cachedIsLoggedIn = false;
+    _cachedUsername = null;
+    _cachedUserRole = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
     await prefs.remove(_keyUsername);
     await prefs.remove(_keyUserRole);
   }
 
-  static const String _keyIsDarkMode = 'is_dark_mode';
-
   static Future<bool> isDarkMode() async {
+    if (_cachedIsDarkMode != null) return _cachedIsDarkMode!;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyIsDarkMode) ?? true;
+    _cachedIsDarkMode = prefs.getBool(_keyIsDarkMode) ?? true;
+    return _cachedIsDarkMode!;
   }
 
   static Future<void> setDarkMode(bool isDark) async {
+    _cachedIsDarkMode = isDark;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyIsDarkMode, isDark);
   }

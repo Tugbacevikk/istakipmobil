@@ -91,8 +91,8 @@ class ApiClient {
 
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
+      connectTimeout: const Duration(seconds: 3),
+      receiveTimeout: const Duration(seconds: 4),
       followRedirects: true,
       extra: {'withCredentials': true},
       validateStatus: (status) => status != null && status < 500,
@@ -127,8 +127,8 @@ class ApiClient {
     try {
       final dio = Dio(BaseOptions(
         baseUrl: targetUrl,
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 5),
+        connectTimeout: const Duration(seconds: 3),
+        receiveTimeout: const Duration(seconds: 3),
         extra: {'withCredentials': true},
         validateStatus: (status) => status != null && status < 500,
       ));
