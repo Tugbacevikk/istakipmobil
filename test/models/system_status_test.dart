@@ -30,10 +30,10 @@ void main() {
       final status = SystemStatus.initial();
 
       expect(status.totalWorkers, 4);
-      expect(status.workingCount, 1);
-      expect(status.idleCount, 3);
+      expect(status.workingCount, 0);
+      expect(status.idleCount, 4);
       expect(status.activeAlarmsCount, 0);
-      expect(status.activeCamerasCount, 1);
+      expect(status.activeCamerasCount, 0);
     });
 
     test('toJson serializes SystemStatus correctly', () {

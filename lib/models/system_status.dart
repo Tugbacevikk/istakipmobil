@@ -51,12 +51,12 @@ class SystemStatus {
   factory SystemStatus.initial() {
     return SystemStatus(
       totalWorkers: 4,
-      workingCount: 1,
-      idleCount: 3,
-      weldingCount: 1,
+      workingCount: 0,
+      idleCount: 4,
+      weldingCount: 0,
       activeAlarmsCount: 0,
-      activeCamerasCount: 1,
-      statusText: '1 İstasyon Aktif (Istasyon-1)',
+      activeCamerasCount: 0,
+      statusText: 'Kameralar Kapalı',
     );
   }
 
