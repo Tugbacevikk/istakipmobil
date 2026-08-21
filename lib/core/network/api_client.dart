@@ -511,6 +511,68 @@ class ApiClient {
     return [];
   }
 
+  static Future<List<Map<String, String>>> fetchMailRecipients() async {
+    _clearError();
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.get('/api/users/mail_recipients');
+      final data = _parseResponseData(response.data);
+
+      if (response.statusCode == 200) {
+        if (data is List) {
+          return data
+              .map((x) => Map<String, String>.from(
+                  (x as Map).map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))))
+              .toList();
+        } else if (data is Map && data['recipients'] is List) {
+          final list = data['recipients'] as List;
+          return list
+              .map((x) => Map<String, String>.from(
+                  (x as Map).map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))))
+              .toList();
+        }
+      }
+    } catch (e) {
+      _setError(e);
+    }
+    return [];
+  }
+
+  static Future<bool> sendReportEmail({
+    required List<String> emails,
+    String? start,
+    String? end,
+    String? istasyon,
+    String? worker,
+  }) async {
+    _clearError();
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post(
+        '/api/reports/email_pdf',
+        data: {
+          'emails': emails,
+          'start_date': start ?? '',
+          'end_date': end ?? '',
+          'istasyon': istasyon ?? '',
+          'worker': worker ?? '',
+        },
+      );
+      final data = _parseResponseData(response.data);
+      if (response.statusCode == 200 && data is Map && data['success'] == true) {
+        return true;
+      }
+      if (data is Map && data.containsKey('message')) {
+        lastErrorMessage = data['message'].toString();
+      } else if (data is Map && data.containsKey('error')) {
+        lastErrorMessage = data['error'].toString();
+      }
+    } catch (e) {
+      _setError(e);
+    }
+    return false;
+  }
+
   static Future<bool> updateProfileEmail(String email) async {
     _clearError();
     try {
