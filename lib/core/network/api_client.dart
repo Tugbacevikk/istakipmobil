@@ -576,17 +576,40 @@ class ApiClient {
     return false;
   }
 
-  static Future<String> _detectRole(Dio dio) async {
-    try {
-      final res = await dio.get('/api/users', options: Options(validateStatus: (s) => true));
-      if (res.statusCode == 200) return 'admin';
-    } catch (_) {}
-    return 'patron';
-  }
-
   static Future<bool> login(String username, String password) async {
     _clearError();
     final dio = await _getSharedDio();
+
+    // 1. Primary approach: Try JSON API Endpoint (/api/login)
+    try {
+      final res = await dio.post(
+        '/api/login',
+        data: {
+          'username': username,
+          'password': password,
+          'kullanici_adi': username,
+          'sifre': password,
+        },
+        options: Options(
+          extra: {'withCredentials': true},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      final data = _parseResponseData(res.data);
+      if (res.statusCode == 200 && data is Map && data['success'] == true) {
+        final userData = data['user'] as Map?;
+        final role = (userData?['rol'] ?? userData?['role'] ?? (username.trim().toLowerCase() == 'admin' ? 'admin' : 'patron')).toString();
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: role);
+        return true;
+      } else if (data is Map && data.containsKey('error')) {
+        lastErrorType = ApiErrorType.badRequest;
+        lastErrorMessage = data['error'].toString();
+        return false;
+      }
+    } catch (_) {}
+
+    // 2. Secondary approach: Form post to /login and verify session via /api/me JSON endpoint
     try {
       final formString = 'username=${Uri.encodeQueryComponent(username)}&password=${Uri.encodeQueryComponent(password)}&kullanici_adi=${Uri.encodeQueryComponent(username)}&sifre=${Uri.encodeQueryComponent(password)}';
 
@@ -601,23 +624,38 @@ class ApiClient {
         ),
       );
 
-      final bodyText = loginRes.data?.toString() ?? '';
-      
-      if (bodyText.contains('Dashboard') || loginRes.realUri.path.contains('dashboard')) {
-        final userRole = await _detectRole(dio);
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
+      // Verify logged in session via /api/me endpoint
+      final sessionRes = await dio.get(
+        '/api/me',
+        options: Options(
+          extra: {'withCredentials': true},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      final sessionData = _parseResponseData(sessionRes.data);
+      if (sessionRes.statusCode == 200 && sessionData is Map && sessionData['success'] == true) {
+        final userData = sessionData['user'] as Map?;
+        final role = (userData?['rol'] ?? userData?['role'] ?? (username.trim().toLowerCase() == 'admin' ? 'admin' : 'patron')).toString();
+        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: role);
         return true;
       }
 
-      final testResponse = await dio.get(
-        '/api/camera/status',
-        options: Options(extra: {'withCredentials': true}),
-      );
+      // Check camera status endpoint as final fallback if session cookie was established
+      if (loginRes.statusCode == 200) {
+        final testResponse = await dio.get(
+          '/api/camera/status',
+          options: Options(
+            extra: {'withCredentials': true},
+            validateStatus: (status) => status != null && status < 500,
+          ),
+        );
 
-      if (testResponse.statusCode == 200) {
-        final userRole = await _detectRole(dio);
-        await SettingsStorage.setSession(isLoggedIn: true, username: username, role: userRole);
-        return true;
+        if (testResponse.statusCode == 200) {
+          final role = (username.trim().toLowerCase() == 'admin') ? 'admin' : 'patron';
+          await SettingsStorage.setSession(isLoggedIn: true, username: username, role: role);
+          return true;
+        }
       }
 
       lastErrorType = ApiErrorType.badRequest;
