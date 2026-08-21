@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    network_security_config.xml - İş Takip Mobil
+    GEÇİCİ ÇÖZÜM: Backend HTTPS'e geçene kadar yerel ağ (LAN/Wi-Fi) HTTP isteklerine izin verir.
+    Sunucu HTTPS (SSL/TLS) sertifikasına geçtiğinde bu istisna dosyası ve Manifest tanımı kaldırılmalıdır.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Yerel Ağ IP Aralıkları ve Localhost İzinleri -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

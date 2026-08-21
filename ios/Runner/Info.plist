@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- 
+		GEÇİCİ ÇÖZÜM: Backend HTTPS'e geçene kadar yerel ağ (LAN/Wi-Fi) HTTP isteklerine izin verir.
+		Dinamik fabrika IP adresleri kullanıldığı için NSAllowsArbitraryLoads aktif edilmiştir.
+		Sunucu HTTPS (SSL/TLS) sertifikasına geçtiğinde bu istisna kaldırılmalıdır.
+	-->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
