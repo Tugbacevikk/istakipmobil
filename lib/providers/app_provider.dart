@@ -143,12 +143,24 @@ class AppProvider extends ChangeNotifier {
 
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
 
-    int liveWorking = _workers.where((w) => w.isAktif && (w.status.contains('Çalış') || w.status.contains('calis') || w.status.toLowerCase().contains('kaynak'))).length;
+    final activeStationNames = activeCams.map((c) => c.name.toLowerCase().trim()).toSet();
 
-    if (liveWorking == 0 && activeCamsCount > 0) {
+    int liveWorking = 0;
+    if (activeStationNames.isNotEmpty) {
+      liveWorking = _workers.where((w) {
+        final st = (w.lastStation ?? '').toLowerCase().trim();
+        return w.isAktif && st.isNotEmpty && activeStationNames.contains(st);
+      }).length;
+
+      if (liveWorking == 0) {
+        liveWorking = activeCamsCount;
+      }
+    } else {
+      liveWorking = activeCamsCount > 0 ? activeCamsCount : fetchedStatus.workingCount;
+    }
+
+    if (activeCamsCount > 0 && liveWorking > activeCamsCount) {
       liveWorking = activeCamsCount;
-    } else if (fetchedStatus.workingCount > liveWorking) {
-      liveWorking = fetchedStatus.workingCount;
     }
 
     int liveWelding = _workers.where((w) => w.isAktif && w.status.toLowerCase().contains('kaynak')).length;
