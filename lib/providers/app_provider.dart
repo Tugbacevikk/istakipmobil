@@ -142,43 +142,23 @@ class AppProvider extends ChangeNotifier {
   void _recalculateSystemStatus(SystemStatus fetchedStatus) {
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
 
-    // Check if live camera stream is actually running
-    final isCameraClosed = fetchedStatus.statusText.toLowerCase().contains('kapalı') ||
-        fetchedStatus.statusText.toLowerCase().contains('off') ||
-        fetchedStatus.activeCamerasCount == 0;
+    // A camera stream is ONLY active if live status is running and activeCamerasCount > 0
+    final bool isLiveStreamRunning = fetchedStatus.activeCamerasCount > 0 &&
+        !fetchedStatus.statusText.toLowerCase().contains('kapalı') &&
+        !fetchedStatus.statusText.toLowerCase().contains('off');
 
     int activeCamsCount = 0;
     int liveWorking = 0;
     int liveWelding = 0;
 
-    if (!isCameraClosed) {
-      final activeCams = _cameras.where((c) => c.isActive).toList();
-      activeCamsCount = activeCams.isNotEmpty ? activeCams.length : fetchedStatus.activeCamerasCount;
-
-      final activeStationNames = activeCams.map((c) => c.name.toLowerCase().trim()).toSet();
-      if (activeStationNames.isNotEmpty) {
-        liveWorking = _workers.where((w) {
-          final st = (w.lastStation ?? '').toLowerCase().trim();
-          return w.isAktif && st.isNotEmpty && activeStationNames.contains(st);
-        }).length;
-      }
-
-      if (liveWorking == 0 && fetchedStatus.workingCount > 0) {
-        liveWorking = fetchedStatus.workingCount;
-      }
-
-      if (activeCamsCount > 0 && liveWorking > activeCamsCount) {
-        liveWorking = activeCamsCount;
-      }
-
-      liveWelding = _workers.where((w) => w.isAktif && w.status.toLowerCase().contains('kaynak')).length;
-      if (liveWelding == 0 && fetchedStatus.weldingCount > 0) {
-        liveWelding = fetchedStatus.weldingCount;
-      }
+    if (isLiveStreamRunning) {
+      activeCamsCount = fetchedStatus.activeCamerasCount;
+      liveWorking = fetchedStatus.workingCount;
+      liveWelding = fetchedStatus.weldingCount;
     }
 
     final liveIdle = totalW >= liveWorking ? (totalW - liveWorking) : 0;
-    final statusText = !isCameraClosed && activeCamsCount > 0
+    final statusText = isLiveStreamRunning
         ? '$activeCamsCount İstasyon Çalışıyor'
         : 'Kameralar Kapalı';
 
@@ -190,8 +170,8 @@ class AppProvider extends ChangeNotifier {
       activeAlarmsCount: _alarms.length,
       activeCamerasCount: activeCamsCount,
       statusText: statusText,
-      activeStation: fetchedStatus.activeStation,
-      activeWorkerName: fetchedStatus.activeWorkerName,
+      activeStation: isLiveStreamRunning ? fetchedStatus.activeStation : null,
+      activeWorkerName: isLiveStreamRunning ? fetchedStatus.activeWorkerName : null,
     );
   }
 
