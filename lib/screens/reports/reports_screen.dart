@@ -153,10 +153,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final customEmailController = TextEditingController();
     bool isSending = false;
     bool isInitialLoading = true;
+    int activeTabIndex = 0; // 0: Herkese Gönder, 1: Kişi Seç, 2: Elle Yaz
 
     List<UserModel> registeredUsers = [];
     Map<int, bool> userSelections = {};
-    Map<int, TextEditingController> emailControllers = {};
+    Map<int, String> userEmails = {};
 
     showDialog(
       context: context,
@@ -197,7 +198,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 final existingEmail = (u.email != null && u.email!.isNotEmpty)
                     ? u.email!
                     : (emailByUsername[u.kullaniciAdi.toLowerCase()] ?? '');
-                emailControllers[u.id] = TextEditingController(text: existingEmail);
+                userEmails[u.id] = existingEmail;
               }
 
               setDialogState(() {
@@ -215,7 +216,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     children: [
                       CircularProgressIndicator(color: AppColors.cyanAccent),
                       SizedBox(height: 12),
-                      Text('Kayıtlı patron hesapları yükleniyor...',
+                      Text('Kullanıcı listesi yükleniyor...',
                           style: TextStyle(color: Colors.white, fontSize: 13)),
                     ],
                   ),
@@ -224,188 +225,236 @@ class _ReportsScreenState extends State<ReportsScreen> {
             );
           }
 
-          final allSelected = registeredUsers.isNotEmpty &&
-              registeredUsers.every((u) => userSelections[u.id] == true);
+          final provider = context.watch<AppProvider>();
+          final isDark = provider.isDarkMode;
 
           return AlertDialog(
-            backgroundColor: AppColors.cardDark,
+            backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: EdgeInsets.zero,
+            titlePadding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
             title: Row(
-              children: const [
-                Icon(Icons.mark_email_read_rounded, color: AppColors.cyanAccent),
-                SizedBox(width: 8),
-                Text('PDF Raporu E-posta ile Gönder', style: TextStyle(color: Colors.white, fontSize: 16)),
-              ],
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Seçilen filtrelere göre hazırlanan PDF raporunu kayıtlı patron hesaplarına veya manuel adrese gönderin:',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                    const SizedBox(height: 14),
-
-                    if (registeredUsers.isNotEmpty) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Kayıtlı Patron Hesapları:',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              setDialogState(() {
-                                final target = !allSelected;
-                                for (var u in registeredUsers) {
-                                  userSelections[u.id] = target;
-                                }
-                              });
-                            },
-                            child: Text(
-                              allSelected ? 'Tümünü Kaldır' : 'Tümünü Seç',
-                              style: const TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 220),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.cardBorder),
-                        ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: registeredUsers.length,
-                          separatorBuilder: (_, __) => const Divider(color: AppColors.cardBorder, height: 1),
-                          itemBuilder: (ctx, idx) {
-                            final u = registeredUsers[idx];
-                            final isChecked = userSelections[u.id] ?? false;
-                            final ctrl = emailControllers[u.id]!;
-
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Checkbox(
-                                        activeColor: AppColors.primary,
-                                        value: isChecked,
-                                        onChanged: (val) {
-                                          setDialogState(() {
-                                            userSelections[u.id] = val == true;
-                                          });
-                                        },
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          '${u.adSoyad} (@${u.kullaniciAdi})',
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: u.rol == 'admin'
-                                              ? AppColors.brandRedLight.withValues(alpha: 0.2)
-                                              : AppColors.cyanAccent.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          u.rol.toUpperCase(),
-                                          style: TextStyle(
-                                            color: u.rol == 'admin'
-                                                ? AppColors.brandRedLight
-                                                : AppColors.cyanAccent,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (isChecked)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 40, right: 8, bottom: 8),
-                                      child: TextField(
-                                        controller: ctrl,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                                        decoration: const InputDecoration(
-                                          labelText: 'E-posta Adresi',
-                                          labelStyle: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                                          hintText: 'patron@sirket.com',
-                                          hintStyle: TextStyle(color: Colors.white38, fontSize: 11),
-                                          isDense: true,
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    const Text(
-                      'Farklı / Ek E-posta Adresi:',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: customEmailController,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: const InputDecoration(
-                        hintText: 'ornek@sirket.com',
-                        hintStyle: TextStyle(color: Colors.white38),
-                        border: OutlineInputBorder(),
-                      ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.send_rounded, color: AppColors.cyanAccent, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Raporu E-posta ile Gönder',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                  onPressed: isSending ? null : () => Navigator.pop(dialogCtx),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Web Style 3 Segmented Tabs
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF0F172A),
+                      border: Border(
+                        top: BorderSide(color: AppColors.cardBorder),
+                        bottom: BorderSide(color: AppColors.cardBorder),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildWebModalTab('Herkese Gönder', 0, activeTabIndex, () {
+                          setDialogState(() => activeTabIndex = 0);
+                        }),
+                        _buildWebModalTab('Kişi Seç', 1, activeTabIndex, () {
+                          setDialogState(() => activeTabIndex = 1);
+                        }),
+                        _buildWebModalTab('Elle Yaz', 2, activeTabIndex, () {
+                          setDialogState(() => activeTabIndex = 2);
+                        }),
+                      ],
+                    ),
+                  ),
+
+                  // Tab Content Area
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (activeTabIndex == 0) ...[
+                          const Text(
+                            'Sistemdeki tüm admin ve patron hesaplarına (e-postası kayıtlı olanlara) gönderilecek.',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            constraints: const BoxConstraints(maxHeight: 140),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: registeredUsers.map((u) {
+                                  final em = userEmails[u.id];
+                                  final hasEmail = em != null && em.isNotEmpty;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 3),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          hasEmail ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                                          color: hasEmail ? AppColors.working : AppColors.alarm,
+                                          size: 14,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            '${u.adSoyad} (${hasEmail ? em : "E-posta yok"})',
+                                            style: TextStyle(
+                                              color: hasEmail ? Colors.white : AppColors.textSecondary,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          u.rol.toUpperCase(),
+                                          style: const TextStyle(color: AppColors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                        ] else if (activeTabIndex == 1) ...[
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 180),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: registeredUsers.length,
+                              itemBuilder: (ctx, idx) {
+                                final u = registeredUsers[idx];
+                                final isChecked = userSelections[u.id] ?? false;
+                                final em = userEmails[u.id] ?? '';
+
+                                return CheckboxListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: AppColors.primary,
+                                  value: isChecked,
+                                  onChanged: (val) {
+                                    setDialogState(() {
+                                      userSelections[u.id] = val == true;
+                                    });
+                                  },
+                                  title: Text(
+                                    '${u.adSoyad} ${em.isNotEmpty ? "($em)" : ""}',
+                                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                                  ),
+                                  secondary: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: u.rol == 'admin'
+                                          ? AppColors.brandRedLight.withValues(alpha: 0.2)
+                                          : AppColors.cyanAccent.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      u.rol.toUpperCase(),
+                                      style: TextStyle(
+                                        color: u.rol == 'admin' ? AppColors.brandRedLight : AppColors.cyanAccent,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ] else ...[
+                          const Text(
+                            'Gönderilecek e-posta adreslerini aralarına virgül koyarak yazın:',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: customEmailController,
+                            maxLines: 3,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(
+                              hintText: 'ornek@sirket.com, patron@sirket.com',
+                              hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             actions: [
               TextButton(
                 onPressed: isSending ? null : () => Navigator.pop(dialogCtx),
-                child: const Text('İptal'),
+                child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
               ),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
                 onPressed: isSending
                     ? null
                     : () async {
                         final Set<String> targetEmails = {};
 
-                        for (var u in registeredUsers) {
-                          if (userSelections[u.id] == true) {
-                            final em = emailControllers[u.id]?.text.trim() ?? '';
-                            if (em.isNotEmpty) {
+                        if (activeTabIndex == 0) {
+                          // All registered with email
+                          for (var u in registeredUsers) {
+                            final em = userEmails[u.id];
+                            if (em != null && em.isNotEmpty) {
                               targetEmails.add(em);
                             }
                           }
-                        }
-
-                        final custom = customEmailController.text.trim();
-                        if (custom.isNotEmpty) {
-                          targetEmails.add(custom);
+                        } else if (activeTabIndex == 1) {
+                          // Checkbox selection
+                          for (var u in registeredUsers) {
+                            if (userSelections[u.id] == true) {
+                              final em = userEmails[u.id];
+                              if (em != null && em.isNotEmpty) {
+                                targetEmails.add(em);
+                              }
+                            }
+                          }
+                        } else {
+                          // Manual input
+                          final raw = customEmailController.text.trim();
+                          if (raw.isNotEmpty) {
+                            for (var parts in raw.split(RegExp(r'[,;]'))) {
+                              final em = parts.trim();
+                              if (em.isNotEmpty) targetEmails.add(em);
+                            }
+                          }
                         }
 
                         if (targetEmails.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Lütfen seçilen patron hesaplarının e-posta adresini doldurun veya ek bir adres yazın.'),
+                              content: Text('Lütfen en az bir geçerli e-posta adresi seçin veya yazın.'),
                               backgroundColor: AppColors.alarm,
                             ),
                           );
@@ -444,11 +493,40 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 icon: isSending
                     ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.send_rounded, color: Colors.white, size: 16),
-                label: Text(isSending ? 'Gönderiliyor...' : 'E-posta Gönder', style: const TextStyle(color: Colors.white)),
+                label: Text(isSending ? 'Gönderiliyor...' : 'Gönder', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildWebModalTab(String title, int tabIndex, int activeIndex, VoidCallback onTap) {
+    final isActive = tabIndex == activeIndex;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? AppColors.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isActive ? AppColors.cyanAccent : AppColors.textSecondary,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+        ),
       ),
     );
   }
