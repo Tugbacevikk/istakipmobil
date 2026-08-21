@@ -16,7 +16,9 @@ class CameraStreamScreen extends StatefulWidget {
   State<CameraStreamScreen> createState() => _CameraStreamScreenState();
 }
 
-class _CameraStreamScreenState extends State<CameraStreamScreen> {
+class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _stationController = TextEditingController();
   final _ipController = TextEditingController();
   bool _isSubmitting = false;
@@ -135,6 +137,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
         final cameras = provider.cameras;
@@ -403,13 +406,25 @@ class LiveStreamPlayer extends StatefulWidget {
   State<LiveStreamPlayer> createState() => _LiveStreamPlayerState();
 }
 
-class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
+class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepAliveClientMixin {
   late String _viewType;
+  int _retryCount = 0;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  void _reloadStream() {
+    if (mounted) {
+      setState(() {
+        _retryCount++;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _viewType = 'mjpeg_${widget.streamUrl.hashCode}_${DateTime.now().microsecondsSinceEpoch}';
+    _viewType = 'mjpeg_${widget.streamUrl.hashCode}';
     if (kIsWeb) {
       registerWebStream(_viewType, widget.streamUrl);
     }
@@ -417,11 +432,16 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     if (kIsWeb) {
       return SizedBox(
         height: 220,
         width: double.infinity,
-        child: HtmlElementView(viewType: _viewType),
+        child: HtmlElementView(
+          key: ValueKey('web_stream_${widget.streamUrl}_$_retryCount'),
+          viewType: _viewType,
+        ),
       );
     }
 
@@ -429,32 +449,64 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       height: 220,
       width: double.infinity,
       color: Colors.black,
-      child: Image.network(
-        widget.streamUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: const Color(0xFF0F172A),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.videocam_rounded, color: AppColors.primary, size: 42),
-                const SizedBox(height: 10),
-                Text(
-                  '${widget.cameraName} Görüntü Yayını',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+      child: Stack(
+        children: [
+          Image.network(
+            widget.streamUrl,
+            key: ValueKey('stream_${widget.streamUrl}_$_retryCount'),
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: const Color(0xFF0F172A),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.videocam_off_rounded, color: AppColors.alarm, size: 38),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${widget.cameraName} Bağlantısı Kesildi',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.streamUrl,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      ),
+                      onPressed: _reloadStream,
+                      icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 16),
+                      label: const Text('Yayını Yeniden Bağla', style: TextStyle(color: Colors.white, fontSize: 12)),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.streamUrl,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                  textAlign: TextAlign.center,
+              );
+            },
+          ),
+          Positioned(
+            right: 8,
+            top: 8,
+            child: InkWell(
+              onTap: _reloadStream,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
                 ),
-              ],
+                child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+              ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
