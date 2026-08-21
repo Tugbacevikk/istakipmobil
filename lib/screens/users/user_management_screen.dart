@@ -98,15 +98,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     setState(() => _isProcessing = false);
 
                     if (mounted) {
+                      final msg = success
+                          ? (isEditMode
+                              ? '"${user.adSoyad}" istasyon yetkileri güncellendi.'
+                              : '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.')
+                          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşlem sırasında bir hata oluştu.');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(
-                            success
-                                ? (isEditMode
-                                    ? '"${user.adSoyad}" istasyon yetkileri güncellendi.'
-                                    : '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.')
-                                : 'İşlem sırasında bir hata oluştu.',
-                          ),
+                          content: Text(msg),
                           backgroundColor: success ? AppColors.working : AppColors.alarm,
                         ),
                       );
@@ -159,9 +158,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     setState(() => _isProcessing = false);
 
     if (mounted) {
+      final msg = success
+          ? 'Başvuru reddedildi.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşlem sırasında bir hata oluştu.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Başvuru reddedildi.' : 'İşlem sırasında bir hata oluştu.'),
+          content: Text(msg),
           backgroundColor: AppColors.alarm,
         ),
       );

@@ -122,9 +122,12 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                 );
                 setState(() => _isSubmitting = false);
                 if (mounted) {
+                  final msg = success
+                      ? '"$ad $soyad" sisteme eklendi.'
+                      : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşçi eklenemedi.');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success ? '"$ad $soyad" sisteme eklendi.' : 'İşçi eklenemedi. İstasyon dolu veya hata oluştu.'),
+                      content: Text(msg),
                       backgroundColor: success ? AppColors.working : AppColors.alarm,
                     ),
                   );
@@ -144,9 +147,12 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
     final ok = await ApiClient.toggleWorkerAktif(workerId);
     setState(() => _isSubmitting = false);
     if (mounted) {
+      final msg = ok
+          ? '"$name" durumu ${!currentAktif ? "Aktif" : "Pasif"} yapıldı.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Durum değiştirilemedi.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? '"$name" durumu ${!currentAktif ? "Aktif" : "Pasif"} yapıldı.' : 'Durum değiştirilemedi.'),
+          content: Text(msg),
           backgroundColor: ok ? AppColors.working : AppColors.alarm,
         ),
       );
@@ -177,9 +183,12 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
       final ok = await ApiClient.deleteWorker(workerId);
       setState(() => _isSubmitting = false);
       if (mounted) {
+        final msg = ok
+            ? '"$name" silindi.'
+            : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Silme işlemi başarısız.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '"$name" silindi.' : 'Silme işlemi başarısız.'),
+            content: Text(msg),
             backgroundColor: ok ? AppColors.working : AppColors.alarm,
           ),
         );

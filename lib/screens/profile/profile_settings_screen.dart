@@ -49,9 +49,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     setState(() => _isEmailLoading = false);
 
     if (mounted) {
+      final msg = success
+          ? '✅ E-posta adresiniz güncellendi.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : '❌ E-posta güncellenemedi.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '✅ E-posta adresiniz güncellendi.' : '❌ E-posta güncellenemedi.'),
+          content: Text(msg),
           backgroundColor: success ? AppColors.working : AppColors.alarm,
         ),
       );
@@ -101,9 +104,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     setState(() => _isPasswordLoading = false);
 
     if (mounted) {
+      final msg = success
+          ? '✅ Şifreniz başarıyla güncellendi.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : '❌ Şifre güncellenemedi.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '✅ Şifreniz başarıyla güncellendi.' : '❌ Şifre güncellenemedi. Mevcut şifrenizi kontrol edin.'),
+          content: Text(msg),
           backgroundColor: success ? AppColors.working : AppColors.alarm,
         ),
       );

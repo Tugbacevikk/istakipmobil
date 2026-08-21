@@ -53,7 +53,10 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const HomeShell()),
       );
     } else if (mounted) {
-      setState(() => _errorMessage = 'Giriş başarısız! Kullanıcı adı veya şifre hatalı.');
+      final errorMsg = ApiClient.lastErrorMessage.isNotEmpty
+          ? ApiClient.lastErrorMessage
+          : 'Giriş başarısız! Kullanıcı adı veya şifre hatalı.';
+      setState(() => _errorMessage = errorMsg);
     }
   }
 

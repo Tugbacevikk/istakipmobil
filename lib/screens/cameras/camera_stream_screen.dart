@@ -77,9 +77,12 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                 final success = await ApiClient.addCamera(name, ip);
                 setState(() => _isSubmitting = false);
                 if (mounted) {
+                  final msg = success
+                      ? '"$name" kamerasını başarıyla eklendi.'
+                      : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera eklenirken bir hata oluştu.');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success ? '"$name" kamerasını başarıyla eklendi.' : 'Kamera eklenirken bir hata oluştu.'),
+                      content: Text(msg),
                       backgroundColor: success ? AppColors.working : AppColors.alarm,
                     ),
                   );
@@ -117,9 +120,12 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
       final success = await ApiClient.deleteCamera(camId);
       setState(() => _isSubmitting = false);
       if (mounted) {
+        final msg = success
+            ? '"$camName" silindi.'
+            : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera silinemedi.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? '"$camName" silindi.' : 'Kamera silinemedi.'),
+            content: Text(msg),
             backgroundColor: success ? AppColors.working : AppColors.alarm,
           ),
         );

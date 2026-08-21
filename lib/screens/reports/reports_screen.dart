@@ -103,6 +103,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
 
     if (mounted) {
+      if (ApiClient.lastErrorMessage.isNotEmpty && ApiClient.lastErrorType != ApiErrorType.none) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ApiClient.lastErrorMessage),
+            backgroundColor: AppColors.alarm,
+          ),
+        );
+      }
       setState(() {
         _workingMin = (data['aktif_sure_dk'] ?? 0).toDouble();
         _idleMin = (data['inaktif_sure_dk'] ?? 0).toDouble();

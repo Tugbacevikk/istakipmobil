@@ -77,6 +77,12 @@ class AppProvider extends ChangeNotifier {
     });
   }
 
+  String? _lastApiError;
+  ApiErrorType _lastApiErrorType = ApiErrorType.none;
+
+  String? get lastApiError => _lastApiError;
+  ApiErrorType get lastApiErrorType => _lastApiErrorType;
+
   Future<void> updateServerUrl(String newUrl) async {
     await SettingsStorage.setServerUrl(newUrl);
     _serverUrl = await SettingsStorage.getServerUrl();
@@ -88,6 +94,8 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> checkConnectionAndFetch() async {
     _isLoading = true;
+    _lastApiError = null;
+    _lastApiErrorType = ApiErrorType.none;
     notifyListeners();
 
     _isConnected = await ApiClient.testConnection(_serverUrl);
@@ -95,6 +103,10 @@ class AppProvider extends ChangeNotifier {
       await refreshData();
     } else {
       _status = SystemStatus.initial();
+      _lastApiErrorType = ApiClient.lastErrorType != ApiErrorType.none ? ApiClient.lastErrorType : ApiErrorType.connection;
+      _lastApiError = ApiClient.lastErrorMessage.isNotEmpty
+          ? ApiClient.lastErrorMessage
+          : 'Sunucuya ulaşılamadı. Lütfen sunucu IP adresini ve Wi-Fi bağlantınızı kontrol edin.';
     }
 
     _isLoading = false;

@@ -417,11 +417,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isConnected ? 'Sunucu Bağlantısı Aktif' : 'Sunucuya Bağlanılamadı',
+                  isConnected
+                      ? 'Sunucu Bağlantısı Aktif'
+                      : (provider.lastApiError ?? 'Sunucuya Bağlanılamadı'),
                   style: TextStyle(
                     color: isConnected ? AppColors.working : AppColors.alarm,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
                 Text(

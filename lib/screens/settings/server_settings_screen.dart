@@ -43,7 +43,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       _testSuccess = success;
       _testResult = success
           ? 'Bağlantı Başarılı! Sunucuya ulaşıldı.'
-          : 'Bağlantı Başarısız! Sunucu adresi ve portu kontrol edin.';
+          : (ApiClient.lastErrorMessage.isNotEmpty
+              ? ApiClient.lastErrorMessage
+              : 'Bağlantı Başarısız! Sunucu adresi ve portu kontrol edin.');
     });
   }
 
