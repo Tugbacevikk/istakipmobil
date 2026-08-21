@@ -47,4 +47,18 @@ class WorkerModel {
       lastStation: json['istasyon_adi']?.toString() ?? json['station']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'ad_soyad': name,
+      'sicil_no': sicilNo,
+      'departman': department,
+      'fotograf_yolu': photoUrl,
+      'son_durum': status,
+      'aktif': isAktif,
+      'son_gorulme': lastSeen,
+      'istasyon_adi': lastStation,
+    };
+  }
 }

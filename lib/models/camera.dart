@@ -25,4 +25,14 @@ class CameraModel {
       ipAddress: json['ip_adresi']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'istasyon_adi': name,
+      'ip_adresi': ipAddress ?? source,
+      'aktif': isActive ? 1 : 0,
+      'konum': location,
+    };
+  }
 }

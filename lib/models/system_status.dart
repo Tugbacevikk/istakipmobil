@@ -59,4 +59,18 @@ class SystemStatus {
       statusText: '1 İstasyon Aktif (Istasyon-1)',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'toplam_isci': totalWorkers,
+      'working_count': workingCount,
+      'idle_count': idleCount,
+      'welding_count': weldingCount,
+      'active_alarms': activeAlarmsCount,
+      'active_cameras_count': activeCamerasCount,
+      'status_text': statusText,
+      'active_station': activeStation,
+      'active_worker_name': activeWorkerName,
+    };
+  }
 }

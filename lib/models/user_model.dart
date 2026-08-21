@@ -31,4 +31,17 @@ class UserModel {
       istasyonlar: json['istasyonlar']?.toString() ?? json['stations']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'kullanici_adi': kullaniciAdi,
+      'ad_soyad': adSoyad,
+      'email': email,
+      'rol': rol,
+      'durum': durum,
+      'firma_adi': firmaAdi,
+      'istasyonlar': istasyonlar,
+    };
+  }
 }

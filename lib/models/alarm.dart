@@ -31,4 +31,17 @@ class AlarmModel {
       severity: json['onem_derecesi'] ?? json['severity'] ?? 'warning',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'alarm_turu': alarmType,
+      'aciklama': message,
+      'zaman': timestamp,
+      'istasyon_adi': cameraName,
+      'isci_adi': workerName,
+      'okundu': isResolved ? 1 : 0,
+      'onem_derecesi': severity,
+    };
+  }
 }
