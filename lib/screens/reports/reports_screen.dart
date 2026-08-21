@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/network/api_client.dart';
+import '../../models/user_model.dart';
 import '../../providers/app_provider.dart';
 
 enum ReportFilterPeriod { today, yesterday, thisWeek, thisMonth, allTime }
