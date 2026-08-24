@@ -76,7 +76,7 @@ class AlarmListScreen extends StatelessWidget {
                   itemCount: alarms.length,
                   itemBuilder: (context, index) {
                     final alarm = alarms[index];
-                    return _buildAlarmCard(alarm, cardColor, textColor, subTextColor);
+                    return _buildAlarmCard(context, alarm, cardColor, textColor, subTextColor);
                   },
                 ),
         );
@@ -84,7 +84,7 @@ class AlarmListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAlarmCard(AlarmModel alarm, Color cardColor, Color textColor, Color subTextColor) {
+  Widget _buildAlarmCard(BuildContext context, AlarmModel alarm, Color cardColor, Color textColor, Color subTextColor) {
     Color severityColor;
     if (alarm.severity == 'critical') {
       severityColor = AppColors.alarm;
@@ -189,6 +189,30 @@ class AlarmListScreen extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(width: 8),
+            // Bildirim Bazlı Okundu İşaretleme Butonu
+            IconButton(
+              icon: Icon(
+                alarm.isRead ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                color: alarm.isRead ? AppColors.working : AppColors.cyanAccent,
+                size: 24,
+              ),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final provider = context.read<AppProvider>();
+                final ok = await ApiClient.markSingleAlarmRead(alarm.id);
+                final msg = ok ? 'İhlal bildirimi okundu olarak işaretlendi.' : 'İşlem gerçekleştirildi.';
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(msg),
+                    backgroundColor: ok ? AppColors.working : AppColors.accent,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+                provider.refreshData();
+              },
+              tooltip: alarm.isRead ? 'Okundu' : 'Bu Bildirimi Okundu İşaretle',
             ),
           ],
         ),

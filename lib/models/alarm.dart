@@ -19,6 +19,8 @@ class AlarmModel {
     required this.severity,
   });
 
+  bool get isRead => isResolved;
+
   factory AlarmModel.fromJson(Map<String, dynamic> json) {
     return AlarmModel(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
