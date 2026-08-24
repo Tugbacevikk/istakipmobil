@@ -193,18 +193,25 @@ class AlarmListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Bildirim Bazlı Okundu İşaretleme Butonu
+            // Bildirim Bazlı Okundu / Okunmadı İşaretleme Butonu
             IconButton(
               icon: Icon(
-                alarm.isRead ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                alarm.isRead ? Icons.check_circle_rounded : Icons.mark_chat_unread_outlined,
                 color: alarm.isRead ? AppColors.working : AppColors.cyanAccent,
                 size: 24,
               ),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 final provider = context.read<AppProvider>();
-                final ok = await ApiClient.markSingleAlarmRead(alarm.id);
-                final msg = ok ? 'İhlal bildirimi okundu olarak işaretlendi.' : 'İşlem gerçekleştirildi.';
+                final bool ok;
+                final String msg;
+                if (alarm.isRead) {
+                  ok = await ApiClient.markSingleAlarmUnread(alarm.id);
+                  msg = ok ? 'İhlal bildirimi okunmadı olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
+                } else {
+                  ok = await ApiClient.markSingleAlarmRead(alarm.id);
+                  msg = ok ? 'İhlal bildirimi okundu olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
+                }
                 messenger.showSnackBar(
                   SnackBar(
                     content: Text(msg),
@@ -214,7 +221,7 @@ class AlarmListScreen extends StatelessWidget {
                 );
                 provider.refreshData();
               },
-              tooltip: alarm.isRead ? 'Okundu' : 'Bu Bildirimi Okundu İşaretle',
+              tooltip: alarm.isRead ? 'Okunmadı İşaretle' : 'Okundu İşaretle',
             ),
           ],
         ),

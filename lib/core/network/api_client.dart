@@ -646,6 +646,20 @@ class ApiClient {
     return false;
   }
 
+  static Future<bool> markSingleAlarmUnread(dynamic alarmId) async {
+    _clearError();
+    try {
+      final dio = await _getSharedDio();
+      final response = await dio.post('/api/alarms/$alarmId/mark_unread');
+      if (response.statusCode == 200) {
+        return true;
+      }
+    } catch (e) {
+      _setError(e);
+    }
+    return false;
+  }
+
   static Future<bool> registerUser({
     required String username,
     required String password,
