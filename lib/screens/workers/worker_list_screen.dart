@@ -164,6 +164,8 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                   }
 
                   if (ad.isNotEmpty && soyad.isNotEmpty) {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final provider = context.read<AppProvider>();
                     Navigator.pop(dialogCtx);
                     setState(() => _isSubmitting = true);
                     final success = await ApiClient.addWorker(
@@ -173,19 +175,17 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                       departman: _departmanController.text.trim(),
                       istasyonAdi: targetStation,
                     );
-                    setState(() => _isSubmitting = false);
-                    if (mounted) {
-                      final msg = success
-                          ? '"$ad $soyad" ($targetStation) sisteme eklendi.'
-                          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşçi eklenemedi.');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(msg),
-                          backgroundColor: success ? AppColors.working : AppColors.alarm,
-                        ),
-                      );
-                      context.read<AppProvider>().refreshData();
-                    }
+                    if (mounted) setState(() => _isSubmitting = false);
+                    final msg = success
+                        ? '"$ad $soyad" ($targetStation) sisteme eklendi.'
+                        : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşçi eklenemedi.');
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(msg),
+                        backgroundColor: success ? AppColors.working : AppColors.alarm,
+                      ),
+                    );
+                    provider.refreshData();
                   }
                 },
                 child: const Text('Ekle', style: TextStyle(color: Colors.white)),
@@ -198,24 +198,26 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
   }
 
   Future<void> _handleToggleAktif(BuildContext context, int workerId, String name, bool currentAktif) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<AppProvider>();
     setState(() => _isSubmitting = true);
     final ok = await ApiClient.toggleWorkerAktif(workerId);
-    setState(() => _isSubmitting = false);
-    if (mounted) {
-      final msg = ok
-          ? '"$name" durumu ${!currentAktif ? "Aktif" : "Pasif"} yapıldı.'
-          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Durum değiştirilemedi.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: ok ? AppColors.working : AppColors.alarm,
-        ),
-      );
-      context.read<AppProvider>().refreshData();
-    }
+    if (mounted) setState(() => _isSubmitting = false);
+    final msg = ok
+        ? '"$name" durumu ${!currentAktif ? "Aktif" : "Pasif"} yapıldı.'
+        : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Durum değiştirilemedi.');
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: ok ? AppColors.working : AppColors.alarm,
+      ),
+    );
+    provider.refreshData();
   }
 
   Future<void> _handleDeleteWorker(BuildContext context, int workerId, String name) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<AppProvider>();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -236,19 +238,17 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
     if (confirm == true) {
       setState(() => _isSubmitting = true);
       final ok = await ApiClient.deleteWorker(workerId);
-      setState(() => _isSubmitting = false);
-      if (mounted) {
-        final msg = ok
-            ? '"$name" silindi.'
-            : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Silme işlemi başarısız.');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: ok ? AppColors.working : AppColors.alarm,
-          ),
-        );
-        context.read<AppProvider>().refreshData();
-      }
+      if (mounted) setState(() => _isSubmitting = false);
+      final msg = ok
+          ? '"$name" silindi.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Silme işlemi başarısız.');
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: ok ? AppColors.working : AppColors.alarm,
+        ),
+      );
+      provider.refreshData();
     }
   }
 

@@ -101,25 +101,25 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       );
                       return;
                     }
+                    final messenger = ScaffoldMessenger.of(context);
+                    final provider = context.read<AppProvider>();
                     Navigator.pop(ctx);
                     setState(() => _isProcessing = true);
                     final success = await ApiClient.approveUser(user.id, selectedStations: approvedList);
-                    setState(() => _isProcessing = false);
+                    if (mounted) setState(() => _isProcessing = false);
 
-                    if (mounted) {
-                      final msg = success
-                          ? (isEditMode
-                              ? '"${user.adSoyad}" istasyon yetkileri güncellendi.'
-                              : '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.')
-                          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşlem sırasında bir hata oluştu.');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(msg),
-                          backgroundColor: success ? AppColors.working : AppColors.alarm,
-                        ),
-                      );
-                      context.read<AppProvider>().refreshData();
-                    }
+                    final msg = success
+                        ? (isEditMode
+                            ? '"${user.adSoyad}" istasyon yetkileri güncellendi.'
+                            : '"${user.adSoyad}" başvurusu onaylandı ve yetkilendirildi.')
+                        : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'İşlem sırasında bir hata oluştu.');
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(msg),
+                        backgroundColor: success ? AppColors.working : AppColors.alarm,
+                      ),
+                    );
+                    provider.refreshData();
                   },
                 ),
               ],

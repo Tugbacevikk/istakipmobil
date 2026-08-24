@@ -73,22 +73,22 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
               final name = _stationController.text.trim();
               final ip = _ipController.text.trim();
               if (name.isNotEmpty && ip.isNotEmpty) {
+                final messenger = ScaffoldMessenger.of(context);
+                final provider = context.read<AppProvider>();
                 Navigator.pop(ctx);
                 setState(() => _isSubmitting = true);
                 final success = await ApiClient.addCamera(name, ip);
-                setState(() => _isSubmitting = false);
-                if (mounted) {
-                  final msg = success
-                      ? '"$name" kamerasını başarıyla eklendi.'
-                      : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera eklenirken bir hata oluştu.');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(msg),
-                      backgroundColor: success ? AppColors.working : AppColors.alarm,
-                    ),
-                  );
-                  context.read<AppProvider>().refreshData();
-                }
+                if (mounted) setState(() => _isSubmitting = false);
+                final msg = success
+                    ? '"$name" kamerasını başarıyla eklendi.'
+                    : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera eklenirken bir hata oluştu.');
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(msg),
+                    backgroundColor: success ? AppColors.working : AppColors.alarm,
+                  ),
+                );
+                provider.refreshData();
               }
             },
             child: const Text('Ekle', style: TextStyle(color: Colors.white)),
@@ -99,6 +99,8 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
   }
 
   Future<void> _handleDeleteCamera(BuildContext context, int camId, String camName) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<AppProvider>();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -119,19 +121,17 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
     if (confirm == true) {
       setState(() => _isSubmitting = true);
       final success = await ApiClient.deleteCamera(camId);
-      setState(() => _isSubmitting = false);
-      if (mounted) {
-        final msg = success
-            ? '"$camName" silindi.'
-            : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera silinemedi.');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: success ? AppColors.working : AppColors.alarm,
-          ),
-        );
-        context.read<AppProvider>().refreshData();
-      }
+      if (mounted) setState(() => _isSubmitting = false);
+      final msg = success
+          ? '"$camName" silindi.'
+          : (ApiClient.lastErrorMessage.isNotEmpty ? ApiClient.lastErrorMessage : 'Kamera silinemedi.');
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: success ? AppColors.working : AppColors.alarm,
+        ),
+      );
+      provider.refreshData();
     }
   }
 
@@ -225,23 +225,14 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
                         child: Padding(
                           padding: const EdgeInsets.all(20),
                           child: Text(
-                            'Kayıtlı diğer ek kameralar yükleniyor...',
+                            'Kayıtlı başka kamera bulunamadı. Sağ üstten yeni kamera ekleyebilirsiniz.',
                             style: TextStyle(color: subTextColor),
                           ),
                         ),
                       )
                     else
                       ...cameras.map((camera) {
-                        String streamUrl;
-                        final ip = camera.ipAddress?.trim() ?? '';
-                        if (ip.startsWith('http://') || ip.startsWith('https://')) {
-                          streamUrl = ip;
-                        } else if (ip.contains(':') || ip.split('.').length == 4) {
-                          final cleanIp = ip.startsWith('http') ? ip : 'http://$ip';
-                          streamUrl = cleanIp.endsWith('/video_feed') ? cleanIp : '$cleanIp:5000/video_feed';
-                        } else {
-                          streamUrl = '$serverUrl/api/proxy_feed/${camera.id}';
-                        }
+                        final String streamUrl = '$serverUrl/api/proxy_feed/${camera.id}';
                         return _buildCameraCard(context, camera, streamUrl, isAdmin, cardColor, textColor, borderColor);
                       }),
                   ],

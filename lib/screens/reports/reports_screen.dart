@@ -461,6 +461,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           return;
                         }
 
+                        final messenger = ScaffoldMessenger.of(context);
+                        final navigator = Navigator.of(dialogCtx);
                         setDialogState(() => isSending = true);
                         final (start, end) = _getDateRange(_selectedPeriod);
                         final istasyonParam = _selectedStation == 'Tüm İstasyonlar' ? '' : _selectedStation;
@@ -474,15 +476,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           worker: workerParam,
                         );
 
-                        setDialogState(() => isSending = false);
                         if (mounted) {
-                          Navigator.pop(dialogCtx);
+                          setDialogState(() => isSending = false);
+                          navigator.pop();
                           final msg = success
                               ? 'PDF Raporu ${targetEmails.length} e-posta adresine başarıyla gönderildi!'
                               : (ApiClient.lastErrorMessage.isNotEmpty
                                   ? ApiClient.lastErrorMessage
                                   : 'E-posta gönderilemedi. Lütfen sunucu SMTP ayarlarını kontrol edin.');
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(msg),
                               backgroundColor: success ? AppColors.working : AppColors.alarm,
