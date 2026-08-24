@@ -141,25 +141,16 @@ class AppProvider extends ChangeNotifier {
 
   void _recalculateSystemStatus(SystemStatus fetchedStatus) {
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
+    final int activeCamsCount = fetchedStatus.activeCamerasCount > 0
+        ? fetchedStatus.activeCamerasCount
+        : (_cameras.isNotEmpty ? _cameras.where((c) => c.isActive).length : (fetchedStatus.statusText.contains('Aktif') ? 1 : 0));
 
-    // A camera stream is ONLY active if live status is running and activeCamerasCount > 0
-    final bool isLiveStreamRunning = fetchedStatus.activeCamerasCount > 0 &&
-        !fetchedStatus.statusText.toLowerCase().contains('kapalı') &&
-        !fetchedStatus.statusText.toLowerCase().contains('off');
+    final int liveWorking = fetchedStatus.workingCount;
+    final int liveWelding = fetchedStatus.weldingCount;
+    final int liveIdle = totalW >= liveWorking ? (totalW - liveWorking) : 0;
 
-    int activeCamsCount = 0;
-    int liveWorking = 0;
-    int liveWelding = 0;
-
-    if (isLiveStreamRunning) {
-      activeCamsCount = fetchedStatus.activeCamerasCount;
-      liveWorking = fetchedStatus.workingCount;
-      liveWelding = fetchedStatus.weldingCount;
-    }
-
-    final liveIdle = totalW >= liveWorking ? (totalW - liveWorking) : 0;
-    final statusText = isLiveStreamRunning
-        ? '$activeCamsCount İstasyon Çalışıyor'
+    final String statusText = activeCamsCount > 0
+        ? '$activeCamsCount İstasyon / Kamera Aktif'
         : 'Kameralar Kapalı';
 
     _status = SystemStatus(
@@ -170,8 +161,8 @@ class AppProvider extends ChangeNotifier {
       activeAlarmsCount: _alarms.length,
       activeCamerasCount: activeCamsCount,
       statusText: statusText,
-      activeStation: isLiveStreamRunning ? fetchedStatus.activeStation : null,
-      activeWorkerName: isLiveStreamRunning ? fetchedStatus.activeWorkerName : null,
+      activeStation: fetchedStatus.activeStation,
+      activeWorkerName: fetchedStatus.activeWorkerName,
     );
   }
 
