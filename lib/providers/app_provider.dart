@@ -70,10 +70,8 @@ class AppProvider extends ChangeNotifier {
 
   void _startSyncTimer() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (_isConnected) {
-        refreshDataSilent();
-      }
+    _syncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      refreshDataSilent();
     });
   }
 
@@ -191,6 +189,16 @@ class AppProvider extends ChangeNotifier {
 
   void _initSocket() {
     SocketService.connect(
+      onStatusUpdate: (data) {
+        if (data != null && data is Map) {
+          try {
+            final jsonMap = Map<String, dynamic>.from(data);
+            final newStatus = SystemStatus.fromJson(jsonMap);
+            _recalculateSystemStatus(newStatus);
+            notifyListeners();
+          } catch (_) {}
+        }
+      },
       onNewAlarm: (data) {
         String msg = '🚨 YENİ ALARM TESPİT EDİLDİ!';
         if (data is Map && data.containsKey('aciklama')) {
