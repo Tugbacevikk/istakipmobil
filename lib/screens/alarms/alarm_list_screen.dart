@@ -194,34 +194,51 @@ class AlarmListScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             // Bildirim Bazlı Okundu / Okunmadı İşaretleme Butonu
-            IconButton(
-              icon: Icon(
-                alarm.isRead ? Icons.check_circle_rounded : Icons.mark_chat_unread_outlined,
-                color: alarm.isRead ? AppColors.working : AppColors.cyanAccent,
-                size: 24,
-              ),
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final provider = context.read<AppProvider>();
-                final bool ok;
-                final String msg;
-                if (alarm.isRead) {
-                  ok = await ApiClient.markSingleAlarmUnread(alarm.id);
-                  msg = ok ? 'İhlal bildirimi okunmadı olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
-                } else {
-                  ok = await ApiClient.markSingleAlarmRead(alarm.id);
-                  msg = ok ? 'İhlal bildirimi okundu olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
-                }
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(msg),
-                    backgroundColor: ok ? AppColors.working : AppColors.accent,
-                    duration: const Duration(seconds: 2),
+            Tooltip(
+              message: alarm.isRead ? 'Okunmadı İşaretle' : 'Okundu İşaretle',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final provider = context.read<AppProvider>();
+                  final bool ok;
+                  final String msg;
+                  if (alarm.isRead) {
+                    ok = await ApiClient.markSingleAlarmUnread(alarm.id);
+                    msg = ok ? 'İhlal bildirimi okunmadı olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
+                  } else {
+                    ok = await ApiClient.markSingleAlarmRead(alarm.id);
+                    msg = ok ? 'İhlal bildirimi okundu olarak işaretlendi.' : 'İşlem gerçekleştirilemedi.';
+                  }
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(msg),
+                      backgroundColor: ok ? AppColors.working : AppColors.accent,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  provider.refreshData();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: alarm.isRead
+                        ? AppColors.working.withValues(alpha: 0.18)
+                        : AppColors.cyanAccent.withValues(alpha: 0.18),
+                    border: Border.all(
+                      color: alarm.isRead ? AppColors.working : AppColors.cyanAccent,
+                      width: 1.8,
+                    ),
                   ),
-                );
-                provider.refreshData();
-              },
-              tooltip: alarm.isRead ? 'Okunmadı İşaretle' : 'Okundu İşaretle',
+                  child: Icon(
+                    alarm.isRead ? Icons.check_rounded : Icons.mark_email_unread_rounded,
+                    color: alarm.isRead ? AppColors.working : AppColors.cyanAccent,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
