@@ -16,23 +16,38 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   bool _isProcessing = false;
 
   void _showApproveOrEditDialog(BuildContext context, UserModel user, {bool isEditMode = false}) {
-    final String currentIst = user.istasyonlar ?? '';
-    final bool hasAllAccess = currentIst.contains('Tüm Fabrika') || currentIst.isEmpty;
-
     final Map<String, bool> selectedStations = {
-      'Istasyon-1': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-1')) : true,
-      'Istasyon-2': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-2')) : true,
-      'Istasyon-3': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-3')) : true,
-      'Istasyon-4': isEditMode ? (hasAllAccess || currentIst.contains('Istasyon-4')) : true,
+      'Istasyon-1': false,
+      'Istasyon-2': false,
+      'Istasyon-3': false,
+      'Istasyon-4': false,
     };
+
+    if (user.istasyonlar != null && user.istasyonlar!.isNotEmpty) {
+      final list = user.istasyonlar!.split(',').map((s) => s.trim()).toList();
+      for (var s in list) {
+        if (selectedStations.containsKey(s)) {
+          selectedStations[s] = true;
+        }
+      }
+    } else {
+      selectedStations['Istasyon-1'] = true;
+    }
 
     showDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final isDark = context.read<AppProvider>().isDarkMode;
+            final dialogBg = isDark ? AppColors.cardDark : Colors.white;
+            final textColor = AppColors.getText(isDark);
+            final subTextColor = AppColors.getSubText(isDark);
+            final borderColor = AppColors.getBorder(isDark);
+
             return AlertDialog(
-              backgroundColor: AppColors.cardDark,
+              backgroundColor: dialogBg,
+              surfaceTintColor: dialogBg,
               title: Row(
                 children: [
                   Icon(
@@ -42,7 +57,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   const SizedBox(width: 8),
                   Text(
                     isEditMode ? 'İstasyon Yetkilerini Düzenle' : 'Onayla & Yetkilendir',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -53,34 +68,34 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   children: [
                     Text(
                       '${user.adSoyad} (@${user.kullaniciAdi})',
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                     if (user.firmaAdi != null && user.firmaAdi!.isNotEmpty)
-                      Text('Firma/Birim: ${user.firmaAdi}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      Text('Firma/Birim: ${user.firmaAdi}', style: TextStyle(color: subTextColor, fontSize: 12)),
                     const SizedBox(height: 14),
-                    const Divider(color: AppColors.cardBorder),
+                    Divider(color: borderColor),
                     const SizedBox(height: 8),
                     Row(
-                      children: const [
-                        Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 16),
-                        SizedBox(width: 6),
+                      children: [
+                        const Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 16),
+                        const SizedBox(width: 6),
                         Text(
                           'Bu Kullanıcının Görebileceği İstasyonlar:',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
 
-                    _buildStationCheckTile('tuğba çevik — Istasyon-1', 'Istasyon-1', selectedStations, setDialogState),
-                    _buildStationCheckTile('Kadir Kaya — Istasyon-2', 'Istasyon-2', selectedStations, setDialogState),
-                    _buildStationCheckTile('Haşim Köksal — Istasyon-3', 'Istasyon-3', selectedStations, setDialogState),
-                    _buildStationCheckTile('gizem akarsu — Istasyon-4', 'Istasyon-4', selectedStations, setDialogState),
+                    _buildStationCheckTile('tuğba çevik — Istasyon-1', 'Istasyon-1', selectedStations, setDialogState, isDark),
+                    _buildStationCheckTile('Kadir Kaya — Istasyon-2', 'Istasyon-2', selectedStations, setDialogState, isDark),
+                    _buildStationCheckTile('Haşim Köksal — Istasyon-3', 'Istasyon-3', selectedStations, setDialogState, isDark),
+                    _buildStationCheckTile('gizem akarsu — Istasyon-4', 'Istasyon-4', selectedStations, setDialogState, isDark),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+                TextButton(onPressed: () => Navigator.pop(ctx), child: Text('İptal', style: TextStyle(color: subTextColor))),
                 ElevatedButton.icon(
                   icon: Icon(isEditMode ? Icons.save_rounded : Icons.check_circle_rounded, color: Colors.white, size: 18),
                   label: Text(
@@ -88,7 +103,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isEditMode ? AppColors.primary : AppColors.working,
+                    backgroundColor: isEditMode ? AppColors.brandRedDark : AppColors.working,
                   ),
                   onPressed: () async {
                     final approvedList = selectedStations.entries.where((e) => e.value).map((e) => e.key).toList();
@@ -130,26 +145,33 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  Widget _buildStationCheckTile(String label, String key, Map<String, bool> selectedMap, StateSetter setDialogState) {
+  Widget _buildStationCheckTile(String label, String key, Map<String, bool> selectedMap, StateSetter setDialogState, bool isDark) {
     final isChecked = selectedMap[key] ?? false;
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+    final tileBg = isChecked
+        ? (isDark ? AppColors.primary.withValues(alpha: 0.25) : AppColors.brandRedDark.withValues(alpha: 0.1))
+        : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC));
+    final borderColor = isChecked ? (isDark ? AppColors.cyanAccent : AppColors.brandRedDark) : AppColors.getBorder(isDark);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: isChecked ? AppColors.primary.withValues(alpha: 0.15) : AppColors.bgDark,
+        color: tileBg,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isChecked ? AppColors.primary : AppColors.cardBorder),
+        border: Border.all(color: borderColor),
       ),
       child: CheckboxListTile(
         title: Text(
           label,
           style: TextStyle(
-            color: isChecked ? Colors.white : AppColors.textSecondary,
+            color: isChecked ? textColor : subTextColor,
             fontSize: 12,
             fontWeight: isChecked ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         value: isChecked,
-        activeColor: AppColors.primary,
+        activeColor: isDark ? AppColors.cyanAccent : AppColors.brandRedDark,
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         onChanged: (val) {
@@ -181,14 +203,20 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _handleDelete(int userId, String name) async {
+    final isDark = context.read<AppProvider>().isDarkMode;
+    final dialogBg = isDark ? AppColors.cardDark : Colors.white;
+    final textColor = AppColors.getText(isDark);
+    final subTextColor = AppColors.getSubText(isDark);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardDark,
-        title: const Text('Başvuruyu / Hesabı Sil', style: TextStyle(color: Colors.white)),
-        content: Text('"$name" başvurusunu tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', style: const TextStyle(color: AppColors.textSecondary)),
+        backgroundColor: dialogBg,
+        surfaceTintColor: dialogBg,
+        title: Text('Başvuruyu / Hesabı Sil', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        content: Text('"$name" başvurusunu tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', style: TextStyle(color: subTextColor)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('İptal', style: TextStyle(color: subTextColor))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.alarm),
             onPressed: () => Navigator.pop(ctx, true),

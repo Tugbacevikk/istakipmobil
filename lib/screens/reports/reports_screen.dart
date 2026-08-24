@@ -228,8 +228,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final provider = context.watch<AppProvider>();
           final isDark = provider.isDarkMode;
 
+          final dialogBgColor = isDark ? AppColors.cardDark : Colors.white;
+          final dialogTextColor = AppColors.getText(isDark);
+          final dialogSubTextColor = AppColors.getSubText(isDark);
+          final dialogBorderColor = AppColors.getBorder(isDark);
+          final dialogContainerBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+
           return AlertDialog(
-            backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+            backgroundColor: dialogBgColor,
+            surfaceTintColor: dialogBgColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             contentPadding: EdgeInsets.zero,
             titlePadding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
@@ -237,17 +244,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.send_rounded, color: AppColors.cyanAccent, size: 20),
-                    SizedBox(width: 8),
+                  children: [
+                    const Icon(Icons.send_rounded, color: AppColors.cyanAccent, size: 20),
+                    const SizedBox(width: 8),
                     Text(
                       'Raporu E-posta ile Gönder',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: dialogTextColor, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                  icon: Icon(Icons.close_rounded, color: dialogSubTextColor, size: 20),
                   onPressed: isSending ? null : () => Navigator.pop(dialogCtx),
                 ),
               ],
@@ -259,11 +266,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 children: [
                   // Web Style 3 Segmented Tabs
                   Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF0F172A),
+                    decoration: BoxDecoration(
+                      color: dialogContainerBg,
                       border: Border(
-                        top: BorderSide(color: AppColors.cardBorder),
-                        bottom: BorderSide(color: AppColors.cardBorder),
+                        top: BorderSide(color: dialogBorderColor),
+                        bottom: BorderSide(color: dialogBorderColor),
                       ),
                     ),
                     child: Row(
@@ -288,18 +295,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (activeTabIndex == 0) ...[
-                          const Text(
+                          Text(
                             'Sistemdeki tüm admin ve patron hesaplarına (e-postası kayıtlı olanlara) gönderilecek.',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            style: TextStyle(color: dialogSubTextColor, fontSize: 12),
                           ),
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.all(10),
                             constraints: const BoxConstraints(maxHeight: 140),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F172A),
+                              color: dialogContainerBg,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.cardBorder),
+                              border: Border.all(color: dialogBorderColor),
                             ),
                             child: SingleChildScrollView(
                               child: Column(
@@ -321,7 +328,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                           child: Text(
                                             '${u.adSoyad} (${hasEmail ? em : "E-posta yok"})',
                                             style: TextStyle(
-                                              color: hasEmail ? Colors.white : AppColors.textSecondary,
+                                              color: hasEmail ? dialogTextColor : dialogSubTextColor,
                                               fontSize: 12,
                                             ),
                                           ),
@@ -351,7 +358,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 return CheckboxListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  activeColor: AppColors.primary,
+                                  activeColor: isDark ? AppColors.cyanAccent : AppColors.brandRedDark,
                                   value: isChecked,
                                   onChanged: (val) {
                                     setDialogState(() {
@@ -360,7 +367,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   },
                                   title: Text(
                                     '${u.adSoyad} ${em.isNotEmpty ? "($em)" : ""}',
-                                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: dialogTextColor, fontSize: 13, fontWeight: FontWeight.w500),
                                   ),
                                   secondary: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -384,19 +391,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             ),
                           ),
                         ] else ...[
-                          const Text(
+                          Text(
                             'Gönderilecek e-posta adreslerini aralarına virgül koyarak yazın:',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            style: TextStyle(color: dialogSubTextColor, fontSize: 12),
                           ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: customEmailController,
                             maxLines: 3,
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
-                            decoration: const InputDecoration(
+                            style: TextStyle(color: dialogTextColor, fontSize: 13),
+                            decoration: InputDecoration(
                               hintText: 'ornek@sirket.com, patron@sirket.com',
-                              hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
-                              border: OutlineInputBorder(),
+                              hintStyle: TextStyle(color: dialogSubTextColor.withValues(alpha: 0.6), fontSize: 12),
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                         ],

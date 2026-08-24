@@ -49,72 +49,72 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) {
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final isDark = context.read<AppProvider>().isDarkMode;
+          final dialogBg = isDark ? AppColors.cardDark : Colors.white;
+          final textColor = AppColors.getText(isDark);
+          final subTextColor = AppColors.getSubText(isDark);
+
           return AlertDialog(
-            backgroundColor: AppColors.cardDark,
-            title: Row(
-              children: const [
-                Icon(Icons.person_add_alt_1_rounded, color: AppColors.cyanAccent),
-                SizedBox(width: 8),
-                Text('Yeni İşçi Ekle', style: TextStyle(color: Colors.white, fontSize: 16)),
-              ],
-            ),
+            backgroundColor: dialogBg,
+            surfaceTintColor: dialogBg,
+            title: Text('Yeni Saha İşçisi Ekle', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: _adController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
                       labelText: 'İşçi Adı',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subTextColor),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _soyadController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
                       labelText: 'İşçi Soyadı',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subTextColor),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _sicilController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
                       labelText: 'Sicil No',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subTextColor),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _departmanController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
                       labelText: 'Departman / Birim',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subTextColor),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     initialValue: availableStations.contains(_selectedStation) ? _selectedStation : availableStations.first,
-                    dropdownColor: AppColors.cardDark,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    dropdownColor: dialogBg,
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
                       labelText: 'Atanacağı İstasyon',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subTextColor),
+                      border: const OutlineInputBorder(),
                     ),
                     items: availableStations.map((st) {
-                      return DropdownMenuItem(value: st, child: Text(st));
+                      return DropdownMenuItem(value: st, child: Text(st, style: TextStyle(color: textColor)));
                     }).toList(),
                     onChanged: (val) {
                       if (val != null) {
@@ -128,13 +128,13 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
                     const SizedBox(height: 10),
                     TextField(
                       controller: _customStationController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
+                      style: TextStyle(color: textColor),
+                      decoration: InputDecoration(
                         labelText: 'Yeni İstasyon Adı (Örn: Istasyon-5)',
-                        labelStyle: TextStyle(color: AppColors.textSecondary),
+                        labelStyle: TextStyle(color: subTextColor),
                         hintText: 'Istasyon-5',
-                        hintStyle: TextStyle(color: Colors.white38),
-                        border: OutlineInputBorder(),
+                        hintStyle: TextStyle(color: subTextColor.withValues(alpha: 0.6)),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ],
@@ -142,9 +142,11 @@ class _WorkerListScreenState extends State<WorkerListScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('İptal')),
+              TextButton(onPressed: () => Navigator.pop(dialogCtx), child: Text('İptal', style: TextStyle(color: subTextColor))),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.brandRedDark : AppColors.primary,
+                ),
                 onPressed: () async {
                   final ad = _adController.text.trim();
                   final soyad = _soyadController.text.trim();

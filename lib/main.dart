@@ -27,12 +27,47 @@ class IsTakipApp extends StatelessWidget {
             theme: ThemeData(
               useMaterial3: true,
               brightness: Brightness.light,
-              scaffoldBackgroundColor: const Color(0xFFF3F4F6),
-              primaryColor: AppColors.primary,
+              scaffoldBackgroundColor: AppColors.bgLight,
+              primaryColor: AppColors.brandRedDark,
               colorScheme: const ColorScheme.light(
-                primary: AppColors.primary,
+                primary: AppColors.brandRedDark,
                 secondary: AppColors.cyanAccent,
                 surface: Colors.white,
+                onSurface: Color(0xFF0F172A),
+              ),
+              dialogTheme: const DialogThemeData(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.white,
+                titleTextStyle: TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.bold),
+                contentTextStyle: TextStyle(color: Color(0xFF334155), fontSize: 14),
+              ),
+              popupMenuTheme: PopupMenuThemeData(
+                color: Colors.white,
+                textStyle: const TextStyle(color: Color(0xFF0F172A), fontSize: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              cardTheme: CardThemeData(
+                color: Colors.white,
+                surfaceTintColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                labelStyle: const TextStyle(color: Color(0xFF475569)),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.brandRedDark, width: 1.8),
+                ),
               ),
               fontFamily: 'Roboto',
             ),
@@ -45,6 +80,41 @@ class IsTakipApp extends StatelessWidget {
                 primary: AppColors.primary,
                 secondary: AppColors.cyanAccent,
                 surface: AppColors.cardDark,
+                onSurface: AppColors.textPrimary,
+              ),
+              dialogTheme: const DialogThemeData(
+                backgroundColor: AppColors.cardDark,
+                surfaceTintColor: AppColors.cardDark,
+                titleTextStyle: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                contentTextStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+              popupMenuTheme: PopupMenuThemeData(
+                color: AppColors.cardDark,
+                textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              cardTheme: CardThemeData(
+                color: AppColors.cardDark,
+                surfaceTintColor: AppColors.cardDark,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: const Color(0xFF0F172A),
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.cardBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.cardBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppColors.cyanAccent, width: 1.8),
+                ),
               ),
               fontFamily: 'Roboto',
             ),
