@@ -299,11 +299,13 @@ class ApiClient {
       return rawList.where((a) {
         final msg = a.message.toLowerCase();
         final cam = (a.cameraName ?? '').toLowerCase();
-        return !msg.contains('video:') &&
-            !msg.contains('.mp4') &&
-            !msg.contains('.avi') &&
-            !cam.contains('video:') &&
-            !cam.contains('.mp4');
+        final isVideoFile = msg.contains('video') ||
+            msg.contains('.mp4') ||
+            msg.contains('.avi') ||
+            msg.contains('.mkv') ||
+            cam.contains('video') ||
+            cam.contains('.mp4');
+        return !isVideoFile;
       }).toList();
     } catch (e) {
       _setError(e);
