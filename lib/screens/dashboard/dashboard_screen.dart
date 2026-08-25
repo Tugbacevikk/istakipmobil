@@ -229,96 +229,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // Overview Heading
+              // Section Heading: Günlük Saha Analitiği & Performans
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Canlı Saha Özet Bilgileri',
+                    'Günlük Saha Analitiği & Performans',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),
                   ),
-                  Text(
-                    'Toplam: ${status.totalWorkers} İşçi',
-                    style: TextStyle(color: subTextColor, fontSize: 13),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 12),
+                        SizedBox(width: 4),
+                        Text(
+                          'GÜNCEL METRİKLER',
+                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
 
-              // 3 KPI Cards: Working, Idle, Welding
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildKpiCard(
-                      title: 'Çalışıyor',
-                      count: status.workingCount,
-                      color: AppColors.working,
-                      icon: Icons.engineering_rounded,
-                      cardColor: cardColor,
-                      subTextColor: subTextColor,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildKpiCard(
-                      title: 'Duruşta',
-                      count: status.idleCount,
-                      color: AppColors.idle,
-                      icon: Icons.timer_rounded,
-                      cardColor: cardColor,
-                      subTextColor: subTextColor,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildKpiCard(
-                      title: 'Kaynak',
-                      count: status.weldingCount,
-                      color: AppColors.accent,
-                      icon: Icons.local_fire_department_rounded,
-                      cardColor: cardColor,
-                      subTextColor: subTextColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // 2 Secondary KPI Cards: Active Alarms & Active Cameras
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSecondaryKpiCard(
-                      title: 'Aktif Alarmlar',
-                      count: status.activeAlarmsCount,
-                      icon: Icons.notifications_active_rounded,
-                      color: AppColors.alarm,
-                      cardColor: cardColor,
-                      textColor: textColor,
-                      subTextColor: subTextColor,
-                      borderColor: borderColor,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSecondaryKpiCard(
-                      title: 'İstasyon / Kamera',
-                      count: status.activeCamerasCount,
-                      icon: Icons.videocam_rounded,
-                      color: AppColors.cyanAccent,
-                      cardColor: cardColor,
-                      textColor: textColor,
-                      subTextColor: subTextColor,
-                      borderColor: borderColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+              // Daily Analytics Grid (Option 1)
+              _buildAnalyticsCards(context, provider, cardColor, textColor, subTextColor, borderColor),
+              const SizedBox(height: 20),
 
               // Alarms Header
               Row(
@@ -449,46 +396,197 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildKpiCard({
-    required String title,
-    required int count,
-    required Color color,
-    required IconData icon,
-    required Color cardColor,
-    required Color subTextColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 12),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+  Widget _buildAnalyticsCards(
+    BuildContext context,
+    AppProvider provider,
+    Color cardColor,
+    Color textColor,
+    Color subTextColor,
+    Color borderColor,
+  ) {
+    final status = provider.status;
+    final int totalWorkers = status.totalWorkers > 0 ? status.totalWorkers : provider.workers.length;
+    final int workingCount = status.workingCount;
+    final int idleCount = status.idleCount;
+    final int activeAlarms = provider.alarms.length;
+    final int activeCams = status.activeCamerasCount;
+    final int totalCams = provider.cameras.isNotEmpty ? provider.cameras.length : 2;
+
+    final double efficiency = totalWorkers > 0 ? ((workingCount / totalWorkers) * 100) : 0.0;
+    final String efficiencyText = '%${efficiency.toStringAsFixed(0)} ${efficiency >= 50 ? "Yüksek" : "Normal"}';
+
+    return Column(
+      children: [
+        // Analytics Card 1: Toplam Çalışan & Vardiya Metriği
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
           ),
-          const SizedBox(height: 2),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: subTextColor,
-            ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.people_alt_rounded, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Saha Çalışan Durumu',
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Kayıtlı İşçi & Vardiya Dağılımı',
+                      style: TextStyle(color: subTextColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$workingCount / $totalWorkers Aktif',
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  Text(
+                    '$idleCount Çalışan Boşta',
+                    style: TextStyle(color: subTextColor, fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+
+        // Analytics Card 2: Saha Verimlilik Oranı
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.working.withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.working.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.insights_rounded, color: AppColors.working, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Saha Verimlilik Oranı',
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Anlık Operasyon Başarı Oranı',
+                      style: TextStyle(color: subTextColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    efficiencyText,
+                    style: const TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  Text(
+                    workingCount > 0 ? 'Aktif Operasyon Var' : 'Saha Beklemede',
+                    style: TextStyle(color: subTextColor, fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Analytics Card 3: Saha Kameraları
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.cyanAccent.withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cyanAccent.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.videocam_rounded,
+                  color: AppColors.cyanAccent,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Saha Kameraları',
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '7/24 Kesintisiz AI Takibi',
+                      style: TextStyle(color: subTextColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$activeCams / $totalCams Kamera CANLI',
+                    style: const TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Text(
+                    activeCams > 0 ? 'Yayınlar Aktif' : 'Kameralar Kapalı',
+                    style: TextStyle(
+                      color: activeCams > 0 ? AppColors.working : subTextColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+
+
 
   Widget _buildSecondaryKpiCard({
     required String title,

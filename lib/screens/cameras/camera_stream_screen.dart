@@ -19,13 +19,14 @@ class CameraStreamScreen extends StatefulWidget {
 class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
   final _stationController = TextEditingController();
   final _ipController = TextEditingController();
   bool _isSubmitting = false;
 
   void _showAddCameraDialog(BuildContext context) {
     _stationController.text = 'Istasyon-${DateTime.now().second}';
-    _ipController.text = '127.0.0.1';
+    _ipController.text = '192.168.30.176';
 
     showDialog(
       context: context,
@@ -55,7 +56,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
               controller: _ipController,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                labelText: 'Kamera IP veya Yerel Adres (Örn: 127.0.0.1)',
+                labelText: 'Kamera IP veya Yerel Adres (Örn: 192.168.30.176)',
                 labelStyle: TextStyle(color: AppColors.textSecondary),
                 border: OutlineInputBorder(),
               ),
@@ -216,23 +217,21 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
                     ),
                     const SizedBox(height: 20),
 
-                    // Default Localhost Camera (Ana Sunucu / Webcam Akışı)
-                    _buildLocalhostWebcamCard(context, serverUrl, isAdmin, cardColor, textColor, borderColor),
-                    const SizedBox(height: 16),
-
                     if (cameras.isEmpty)
                       Center(
                         child: Padding(
                           padding: const EdgeInsets.all(20),
                           child: Text(
-                            'Kayıtlı başka kamera bulunamadı. Sağ üstten yeni kamera ekleyebilirsiniz.',
+                            'Kayıtlı kamera bulunamadı. Sağ üstten yeni kamera ekleyebilirsiniz.',
                             style: TextStyle(color: subTextColor),
                           ),
                         ),
                       )
                     else
                       ...cameras.map((camera) {
-                        final String streamUrl = '$serverUrl/api/proxy_feed/${camera.id}';
+                        final String streamUrl = (camera.id == 1 || camera.name.toLowerCase().contains('1'))
+                            ? '$serverUrl/video_feed'
+                            : '$serverUrl/api/proxy_feed/${camera.id}';
                         return _buildCameraCard(context, camera, streamUrl, isAdmin, cardColor, textColor, borderColor);
                       }),
                   ],
@@ -247,56 +246,6 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
           ),
         );
       },
-    );
-  }
-
-  Widget _buildLocalhostWebcamCard(BuildContext context, String serverUrl, bool isAdmin, Color cardColor, Color textColor, Color borderColor) {
-    final streamUrl = '$serverUrl/video_feed';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.brandRedLight.withValues(alpha: 0.6), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.camera_front_rounded, color: AppColors.brandRedLight, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Ana Sunucu Kamera Yayını (Localhost)',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.working.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('CANLI YAYIN', style: TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 11)),
-                ),
-              ],
-            ),
-          ),
-          LiveStreamPlayer(streamUrl: streamUrl, cameraName: 'Ana Sunucu Kamera Yayını'),
-        ],
-      ),
     );
   }
 
@@ -399,18 +348,10 @@ class LiveStreamPlayer extends StatefulWidget {
 
 class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepAliveClientMixin {
   late String _viewType;
-  int _retryCount = 0;
+  final int _retryCount = 0;
 
   @override
   bool get wantKeepAlive => true;
-
-  void _reloadStream() {
-    if (mounted) {
-      setState(() {
-        _retryCount++;
-      });
-    }
-  }
 
   @override
   void initState() {
@@ -427,7 +368,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
 
     if (kIsWeb) {
       return SizedBox(
-        height: 220,
+        height: 240,
         width: double.infinity,
         child: HtmlElementView(
           key: ValueKey('web_stream_${widget.streamUrl}_$_retryCount'),
@@ -437,67 +378,26 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
     }
 
     return Container(
-      height: 220,
+      height: 240,
       width: double.infinity,
       color: Colors.black,
-      child: Stack(
-        children: [
-          Image.network(
-            widget.streamUrl,
-            key: ValueKey('stream_${widget.streamUrl}_$_retryCount'),
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFF0F172A),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.videocam_off_rounded, color: AppColors.alarm, size: 38),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${widget.cameraName} Bağlantısı Kesildi',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.streamUrl,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      ),
-                      onPressed: _reloadStream,
-                      icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 16),
-                      label: const Text('Yayını Yeniden Bağla', style: TextStyle(color: Colors.white, fontSize: 12)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          Positioned(
-            right: 8,
-            top: 8,
-            child: InkWell(
-              onTap: _reloadStream,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
-              ),
+      child: Image.network(
+        widget.streamUrl,
+        key: ValueKey('stream_${widget.streamUrl}_$_retryCount'),
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.error_outline_rounded, color: AppColors.alarm, size: 36),
+                SizedBox(height: 8),
+                Text('Kamera Yayını Alınamadı', style: TextStyle(color: Colors.white)),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

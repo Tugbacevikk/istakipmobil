@@ -18,7 +18,7 @@ class SettingsStorage {
     if (kIsWeb) {
       final Uri uri = Uri.base;
       if (uri.host.isNotEmpty) {
-        final portStr = uri.hasPort ? ':${uri.port}' : '';
+        final portStr = (uri.hasPort && uri.port != 80 && uri.port != 443) ? ':${uri.port}' : '';
         return '${uri.scheme}://${uri.host}$portStr';
       }
       return 'http://localhost:5000';
@@ -27,6 +27,10 @@ class SettingsStorage {
   }
 
   static Future<String> getServerUrl() async {
+    if (kIsWeb) {
+      _cachedServerUrl = defaultServerUrl;
+      return _cachedServerUrl!;
+    }
     if (_cachedServerUrl != null) return _cachedServerUrl!;
     final prefs = await SharedPreferences.getInstance();
     _cachedServerUrl = prefs.getString(_keyServerUrl) ?? defaultServerUrl;
