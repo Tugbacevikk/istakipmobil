@@ -8,6 +8,8 @@ void main() {
         'running': true,
         'status': 'Çalışıyor',
         'active_alarms': 3,
+        'active_cameras_count': 1,
+        'status_text': '1 İstasyon Aktif (Istasyon-1)',
         'summary': {
           'toplam_isci': 8,
         },

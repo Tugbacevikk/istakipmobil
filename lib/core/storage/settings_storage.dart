@@ -23,7 +23,7 @@ class SettingsStorage {
       }
       return 'http://localhost:5000';
     }
-    return 'http://10.0.2.2:5000';
+    return 'http://192.168.30.168:5000';
   }
 
   static Future<String> getServerUrl() async {

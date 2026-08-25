@@ -139,11 +139,12 @@ class AppProvider extends ChangeNotifier {
 
   void _recalculateSystemStatus(SystemStatus fetchedStatus) {
     final totalW = _workers.isNotEmpty ? _workers.length : fetchedStatus.totalWorkers;
+    final int onlineStations = fetchedStatus.stations.where((s) => s.isOnline).length;
     final int activeCamsCount = fetchedStatus.activeCamerasCount > 0
         ? fetchedStatus.activeCamerasCount
-        : (_cameras.isNotEmpty ? _cameras.where((c) => c.isActive).length : (fetchedStatus.statusText.contains('Aktif') ? 1 : 0));
+        : (onlineStations > 0 ? onlineStations : (_cameras.isNotEmpty ? _cameras.where((c) => c.isActive).length : (fetchedStatus.statusText.contains('Aktif') ? 1 : 0)));
 
-    final int liveWorking = fetchedStatus.workingCount;
+    final int liveWorking = onlineStations > 0 ? onlineStations : fetchedStatus.workingCount;
     final int liveWelding = fetchedStatus.weldingCount;
     final int liveIdle = totalW >= liveWorking ? (totalW - liveWorking) : 0;
 
@@ -161,6 +162,7 @@ class AppProvider extends ChangeNotifier {
       statusText: statusText,
       activeStation: fetchedStatus.activeStation,
       activeWorkerName: fetchedStatus.activeWorkerName,
+      stations: fetchedStatus.stations,
     );
   }
 
