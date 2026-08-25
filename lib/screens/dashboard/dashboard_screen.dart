@@ -228,12 +228,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // Section Heading: Günlük Saha Analitiği & Performans
+              // Section Heading: Saha ve Sistem Özeti
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Günlük Saha Analitiği & Performans',
+                    'Saha ve Sistem Özeti',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -243,17 +243,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: AppColors.working.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
-                        Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 12),
+                        Icon(Icons.check_circle_rounded, color: AppColors.working, size: 12),
                         SizedBox(width: 4),
                         Text(
-                          'GÜNCEL METRİKLER',
-                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
+                          'SİSTEM AKTİF',
+                          style: TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 10),
                         ),
                       ],
                     ),
@@ -262,7 +262,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Daily Analytics Grid (Option 1)
+              // Simple 2-Card Overview: Cameras & Workers
               _buildAnalyticsCards(context, provider, cardColor, textColor, subTextColor, borderColor),
               const SizedBox(height: 20),
 
@@ -404,125 +404,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Color borderColor,
   ) {
     final status = provider.status;
-    final int totalWorkers = status.totalWorkers > 0 ? status.totalWorkers : provider.workers.length;
-    final int workingCount = status.workingCount;
-    final int idleCount = status.idleCount;
-    final int activeCams = status.activeCamerasCount;
+    final int totalWorkers = provider.workers.isNotEmpty ? provider.workers.length : status.totalWorkers;
     final int totalCams = provider.cameras.isNotEmpty ? provider.cameras.length : 2;
-
-    final double efficiency = totalWorkers > 0 ? ((workingCount / totalWorkers) * 100) : 0.0;
-    final String efficiencyText = '%${efficiency.toStringAsFixed(0)} ${efficiency >= 50 ? "Yüksek" : "Normal"}';
 
     return Column(
       children: [
-        // Analytics Card 1: Toplam Çalışan & Vardiya Metriği
+        // Card 1: Saha Kameraları
         Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.people_alt_rounded, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Saha Çalışan Durumu',
-                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Kayıtlı İşçi & Vardiya Dağılımı',
-                      style: TextStyle(color: subTextColor, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$workingCount / $totalWorkers Aktif',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Text(
-                    '$idleCount Çalışan Boşta',
-                    style: TextStyle(color: subTextColor, fontSize: 10, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Analytics Card 2: Saha Verimlilik Oranı
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.working.withValues(alpha: 0.4), width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.working.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.insights_rounded, color: AppColors.working, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Saha Verimlilik Oranı',
-                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Anlık Operasyon Başarı Oranı',
-                      style: TextStyle(color: subTextColor, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    efficiencyText,
-                    style: const TextStyle(color: AppColors.working, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Text(
-                    workingCount > 0 ? 'Aktif Operasyon Var' : 'Saha Beklemede',
-                    style: TextStyle(color: subTextColor, fontSize: 10, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Analytics Card 3: Saha Kameraları
-        Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: cardColor,
@@ -554,7 +443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '7/24 Kesintisiz AI Takibi',
+                      'Bağlı Kamera & İstasyonlar',
                       style: TextStyle(color: subTextColor, fontSize: 12),
                     ),
                   ],
@@ -564,16 +453,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '$activeCams / $totalCams Kamera CANLI',
+                    '$totalCams Kamera Tanımlı',
                     style: const TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                  Text(
-                    activeCams > 0 ? 'Yayınlar Aktif' : 'Kameralar Kapalı',
+                  const Text(
+                    'Canlı Yayınlar Aktif',
                     style: TextStyle(
-                      color: activeCams > 0 ? AppColors.working : subTextColor,
+                      color: AppColors.working,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Card 2: Çalışan Bilgisi
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.people_alt_rounded, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kayıtlı Çalışanlar',
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Fabrika Personel Listesi',
+                      style: TextStyle(color: subTextColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$totalWorkers Çalışan Kayıtlı',
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  Text(
+                    'İstasyonlara Atandı',
+                    style: TextStyle(color: subTextColor, fontSize: 10, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
