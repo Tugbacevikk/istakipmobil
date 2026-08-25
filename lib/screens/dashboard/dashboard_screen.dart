@@ -24,7 +24,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final isConnected = provider.isConnected;
-    final status = provider.status;
     final isDark = provider.isDarkMode;
 
     final bgColor = AppColors.getBg(isDark);
@@ -408,7 +407,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final int totalWorkers = status.totalWorkers > 0 ? status.totalWorkers : provider.workers.length;
     final int workingCount = status.workingCount;
     final int idleCount = status.idleCount;
-    final int activeAlarms = provider.alarms.length;
     final int activeCams = status.activeCamerasCount;
     final int totalCams = provider.cameras.isNotEmpty ? provider.cameras.length : 2;
 
@@ -586,62 +584,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-
-  Widget _buildSecondaryKpiCard({
-    required String title,
-    required int count,
-    required IconData icon,
-    required Color color,
-    required Color cardColor,
-    required Color textColor,
-    required Color subTextColor,
-    required Color borderColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: subTextColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildAlarmTile(
     AlarmModel alarm,
