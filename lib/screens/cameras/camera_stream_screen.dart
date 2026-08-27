@@ -352,37 +352,47 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
     super.build(context);
 
     if (kIsWeb) {
-      return SizedBox(
-        height: 240,
-        width: double.infinity,
-        child: HtmlElementView(
-          key: ValueKey('web_stream_${widget.streamUrl}_$_retryCount'),
-          viewType: _viewType,
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Container(
+            color: Colors.black,
+            child: HtmlElementView(
+              key: ValueKey('web_stream_${widget.streamUrl}_$_retryCount'),
+              viewType: _viewType,
+            ),
+          ),
         ),
       );
     }
 
-    return Container(
-      height: 240,
-      width: double.infinity,
-      color: Colors.black,
-      child: Image.network(
-        widget.streamUrl,
-        key: ValueKey('stream_${widget.streamUrl}_$_retryCount'),
-        fit: BoxFit.cover,
-        gaplessPlayback: true,
-        errorBuilder: (context, error, stackTrace) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.error_outline_rounded, color: AppColors.alarm, size: 36),
-                SizedBox(height: 8),
-                Text('Kamera Yayını Alınamadı', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-          );
-        },
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Container(
+          color: Colors.black,
+          child: Image.network(
+            widget.streamUrl,
+            key: ValueKey('stream_${widget.streamUrl}_$_retryCount'),
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.low,
+            errorBuilder: (context, error, stackTrace) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.videocam_off_rounded, color: AppColors.alarm, size: 40),
+                    SizedBox(height: 8),
+                    Text('Kamera Yayını Alınamadı', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
