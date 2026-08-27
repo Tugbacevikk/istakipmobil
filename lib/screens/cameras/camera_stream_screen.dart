@@ -5,7 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/network/api_client.dart';
 import '../../models/camera.dart';
 import '../../providers/app_provider.dart';
-import '../settings/camera_roi_settings_screen.dart';
+
 
 import 'web_stream_stub.dart' if (dart.library.html) 'web_stream_real.dart';
 
@@ -284,21 +284,6 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
                 Row(
                   children: [
                     if (isAdmin) ...[
-                      IconButton(
-                        icon: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 20),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CameraRoiSettingsScreen(
-                                cameraName: camera.name,
-                                streamUrl: streamUrl,
-                              ),
-                            ),
-                          );
-                        },
-                        tooltip: 'ROI / Bölge Ayarları',
-                      ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded, color: AppColors.alarm, size: 20),
                         onPressed: () => _handleDeleteCamera(context, camera.id, camera.name),
