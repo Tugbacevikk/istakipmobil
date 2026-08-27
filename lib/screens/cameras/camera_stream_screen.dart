@@ -249,6 +249,89 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
     );
   }
 
+  void _showFullscreenCamera(BuildContext context, CameraModel camera, String streamUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.videocam_rounded, color: AppColors.cyanAccent, size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${camera.name} (${camera.ipAddress ?? "Yerel IP"})',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: camera.isActive ? AppColors.working.withValues(alpha: 0.2) : AppColors.alarm.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        camera.isActive ? 'CANLI' : 'KAPALI',
+                        style: TextStyle(
+                          color: camera.isActive ? AppColors.working : AppColors.alarm,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+                      onPressed: () => Navigator.pop(dialogCtx),
+                      tooltip: 'Kapat',
+                    ),
+                  ],
+                ),
+              ),
+              // Enlarged Video with InteractiveViewer for zoom
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 1.0,
+                  maxScale: 3.5,
+                  child: LiveStreamPlayer(
+                    streamUrl: streamUrl,
+                    cameraName: camera.name,
+                    isFullscreen: true,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCameraCard(BuildContext context, CameraModel camera, String streamUrl, bool isAdmin, Color cardColor, Color textColor, Color borderColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -261,7 +344,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -283,6 +366,11 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
                 ),
                 Row(
                   children: [
+                    IconButton(
+                      icon: const Icon(Icons.fullscreen_rounded, color: AppColors.cyanAccent, size: 22),
+                      onPressed: () => _showFullscreenCamera(context, camera, streamUrl),
+                      tooltip: 'Büyük Ekran',
+                    ),
                     if (isAdmin) ...[
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded, color: AppColors.alarm, size: 20),
@@ -310,7 +398,11 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
               ],
             ),
           ),
-          LiveStreamPlayer(streamUrl: streamUrl, cameraName: camera.name),
+          InkWell(
+            onTap: () => _showFullscreenCamera(context, camera, streamUrl),
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+            child: LiveStreamPlayer(streamUrl: streamUrl, cameraName: camera.name),
+          ),
         ],
       ),
     );
@@ -320,11 +412,15 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> with AutomaticK
 class LiveStreamPlayer extends StatefulWidget {
   final String streamUrl;
   final String cameraName;
+  final bool isFullscreen;
+  final BorderRadius? borderRadius;
 
   const LiveStreamPlayer({
     super.key,
     required this.streamUrl,
     required this.cameraName,
+    this.isFullscreen = false,
+    this.borderRadius,
   });
 
   @override
@@ -341,7 +437,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    _viewType = 'mjpeg_${widget.streamUrl.hashCode}';
+    _viewType = 'mjpeg_${widget.streamUrl.hashCode}_${widget.isFullscreen ? "full" : "card"}';
     if (kIsWeb) {
       registerWebStream(_viewType, widget.streamUrl);
     }
@@ -351,9 +447,11 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
   Widget build(BuildContext context) {
     super.build(context);
 
+    final rad = widget.borderRadius ?? const BorderRadius.vertical(bottom: Radius.circular(14));
+
     if (kIsWeb) {
       return ClipRRect(
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+        borderRadius: rad,
         child: AspectRatio(
           aspectRatio: 16 / 9,
           child: Container(
@@ -368,7 +466,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> with AutomaticKeepA
     }
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+      borderRadius: rad,
       child: AspectRatio(
         aspectRatio: 16 / 9,
         child: Container(
